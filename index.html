@@ -1056,7 +1056,8 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
                 <h3
                     style="font-size:12px;font-weight:700;color:var(--text-bright);letter-spacing:2px;display:flex;align-items:center;gap:8px">
-                    <span class="mi" style="color:var(--gold)">show_chart</span> EQUITY CURVE</h3>
+                    <span class="mi" style="color:var(--gold)">show_chart</span> EQUITY CURVE
+                </h3>
                 <div class="chart-stats"><span>High: <span id="eq-h" class="mono"
                             style="color:#fff">$15.00</span></span><span>Low: <span id="eq-l" class="mono"
                             style="color:#fff">$15.00</span></span></div>
@@ -1082,7 +1083,8 @@
                 <div class="term-hdr">
                     <h3
                         style="font-size:12px;font-weight:700;color:var(--gold);letter-spacing:2px;display:flex;align-items:center;gap:8px">
-                        <span class="mi" style="font-size:14px">terminal</span> AI VALENTINI</h3>
+                        <span class="mi" style="font-size:14px">terminal</span> AI VALENTINI
+                    </h3>
                     <div class="term-dots"><span style="background:#ef4444"></span><span
                             style="background:#eab308"></span><span style="background:#22c55e"></span></div>
                 </div>
@@ -1192,14 +1194,14 @@
             }
         }
 
-        async function fetchPrices() {
-            const { data } = await sb.from('ghost_prices').select('symbol,price,trend,momentum,recorded_at').order('recorded_at', { ascending: false }).limit(50);
-            const latest = {};
-            if (data) data.forEach(p => { if (!latest[p.symbol]) latest[p.symbol] = p; });
-            const ac = Object.keys(latest).filter(k => ASSETS.includes(k)).length;
+        let latestPrices = {};
+        let priceRenderTimeout = null;
+
+        function renderPrices() {
+            const ac = Object.keys(latestPrices).filter(k => ASSETS.includes(k)).length;
             document.getElementById('act-a').textContent = ac + ' ACTIVE';
             document.getElementById('mkt').innerHTML = ASSETS.map(name => {
-                const d = latest[name];
+                const d = latestPrices[name];
                 if (!d) return `<tr><td style="color:var(--gold);font-weight:700">${name}</td><td colspan="6" class="c" style="color:var(--text-dim);font-size:11px">Waiting...</td></tr>`;
                 const m = +(d.momentum || 0);
                 const mc = m > 0 ? 'var(--green)' : m < 0 ? 'var(--red)' : 'var(--text-dim)';
@@ -1212,6 +1214,26 @@
                 const ofl = cr ? '<span class="tag tag-cyan">L2 LIVE</span>' : '<span style="color:#333">—</span>';
                 return `<tr><td style="color:var(--gold);font-weight:700">${name}</td><td class="r mono" style="color:#fff">${(+d.price).toFixed(d.price > 100 ? 2 : 4)}</td><td class="r mono" style="color:${mc}">${m > 0 ? '+' : ''}${m.toFixed(2)}%</td><td class="c"><span class="tag ${stC}">${stL}</span></td><td><div class="rsi"><span class="rsi-val mono">${rsi}</span><div class="rsi-bar"><div class="rsi-fill" style="width:${rsi}%;background:${rp}"></div></div></div></td><td>${ofl}</td><td class="c"><span class="mi" style="color:${sigC};font-size:16px">${sig}</span></td></tr>`;
             }).join('');
+        }
+
+        async function fetchPrices() {
+            const { data } = await sb.from('ghost_prices').select('symbol,price,trend,momentum,recorded_at').order('recorded_at', { ascending: false }).limit(50);
+            if (data) {
+                data.forEach(p => { if (!latestPrices[p.symbol]) latestPrices[p.symbol] = p; });
+                renderPrices();
+            }
+        }
+
+        function handleRealtimePrice(payload) {
+            if (payload && payload.new && payload.new.symbol) {
+                latestPrices[payload.new.symbol] = payload.new;
+                if (priceRenderTimeout === null) {
+                    priceRenderTimeout = setTimeout(() => {
+                        requestAnimationFrame(renderPrices);
+                        priceRenderTimeout = null;
+                    }, 500);
+                }
+            }
         }
 
         async function fetchReflection() {
@@ -1261,8 +1283,11 @@
                 const ch = sb.channel('sentinel-rt-v2');
                 ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, () => fetchPortfolio().catch(() => { }));
                 ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, () => fetchTrades().catch(() => { }));
-                ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_prices' }, () => fetchPrices().catch(() => { }));
-                ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, () => { fetchReflection().catch(() => { }); fetchLearn().catch(() => { }); });
+                let learningTimeout = null;
+                ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_prices' }, (payload) => handleRealtimePrice(payload));
+                ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, () => {
+                    if (learningTimeout === null) { learningTimeout = setTimeout(() => { fetchReflection().catch(() => { }); fetchLearn().catch(() => { }); learningTimeout = null; }, 1000); }
+                });
                 ch.subscribe(status => {
                     if (status === 'SUBSCRIBED') setConn('live');
                     else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') { setConn('poll'); setTimeout(setupRT, 5000); }
