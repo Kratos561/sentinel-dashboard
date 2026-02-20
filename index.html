@@ -222,13 +222,11 @@
 
             0%,
             100% {
-                box-shadow: 0 0 5px rgba(245, 165, 36, 0.15);
-                border-color: rgba(245, 165, 36, 0.25)
+                opacity: 0.6
             }
 
             50% {
-                box-shadow: 0 0 18px rgba(245, 165, 36, 0.4);
-                border-color: rgba(245, 165, 36, 0.7)
+                opacity: 1
             }
         }
 
@@ -614,7 +612,14 @@
         /* Intelligence panel */
         .intel {
             position: relative;
-            overflow: hidden
+            overflow: hidden;
+            box-shadow: 0 0 12px rgba(245, 165, 36, 0.15);
+            border: 1px solid rgba(245, 165, 36, 0.25);
+        }
+
+        .intel.anim-glow {
+            animation: none;
+            /* Expensive borderGlow disabled for perf */
         }
 
         .intel::before,
@@ -1116,15 +1121,20 @@
         let eqChart = null, lastBal = null, rtOk = false;
 
         // ═══ CLOCK ═══
+        let lastH = -1;
         function tick() {
             const n = new Date();
             document.getElementById('clock').textContent = n.toLocaleTimeString('es-VE', { timeZone: 'America/Caracas' }) + ' VET';
-            document.getElementById('sess-sub').textContent = 'UTC ' + n.toISOString().substring(11, 16);
-            const h = n.getUTCHours(), el = document.getElementById('sess'), c = document.getElementById('sess-card');
-            if (h >= 13 && h <= 16) { el.innerHTML = '<span class="mi" style="font-size:16px">flash_on</span> OVERLAP'; el.style.color = 'var(--gold)'; c.style.borderLeftColor = 'var(--gold)'; c.style.background = 'rgba(245,165,36,0.03)'; }
-            else if (h >= 7 && h < 13) { el.innerHTML = '<span class="mi" style="font-size:16px">public</span> LONDON'; el.style.color = 'var(--blue)'; c.style.borderLeftColor = 'var(--blue)'; c.style.background = 'rgba(68,136,255,0.03)'; }
-            else if (h > 16 && h <= 22) { el.innerHTML = '<span class="mi" style="font-size:16px">location_city</span> NEW YORK'; el.style.color = 'var(--green)'; c.style.borderLeftColor = 'var(--green)'; c.style.background = 'rgba(0,255,136,0.03)'; }
-            else { el.innerHTML = '<span class="mi" style="font-size:16px">bedtime</span> CLOSED'; el.style.color = 'var(--red)'; c.style.borderLeftColor = 'var(--red)'; c.style.background = 'rgba(255,68,102,0.03)'; }
+            const h = n.getUTCHours();
+            if (h !== lastH) {
+                document.getElementById('sess-sub').textContent = 'UTC ' + n.toISOString().substring(11, 16);
+                const el = document.getElementById('sess'), c = document.getElementById('sess-card');
+                if (h >= 13 && h <= 16) { el.innerHTML = '<span class="mi" style="font-size:16px">flash_on</span> OVERLAP'; el.style.color = 'var(--gold)'; c.style.borderLeftColor = 'var(--gold)'; c.style.background = 'rgba(245,165,36,0.03)'; }
+                else if (h >= 7 && h < 13) { el.innerHTML = '<span class="mi" style="font-size:16px">public</span> LONDON'; el.style.color = 'var(--blue)'; c.style.borderLeftColor = 'var(--blue)'; c.style.background = 'rgba(68,136,255,0.03)'; }
+                else if (h > 16 && h <= 22) { el.innerHTML = '<span class="mi" style="font-size:16px">location_city</span> NEW YORK'; el.style.color = 'var(--green)'; c.style.borderLeftColor = 'var(--green)'; c.style.background = 'rgba(0,255,136,0.03)'; }
+                else { el.innerHTML = '<span class="mi" style="font-size:16px">bedtime</span> CLOSED'; el.style.color = 'var(--red)'; c.style.borderLeftColor = 'var(--red)'; c.style.background = 'rgba(255,68,102,0.03)'; }
+                lastH = h;
+            }
         }
         setInterval(tick, 1000); tick();
 
@@ -1281,8 +1291,13 @@
         function setupRT() {
             try {
                 const ch = sb.channel('sentinel-rt-v2');
-                ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, () => fetchPortfolio().catch(() => { }));
-                ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, () => fetchTrades().catch(() => { }));
+                let portTimeout = null, tradeTimeout = null;
+                ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, () => {
+                    if (!portTimeout) portTimeout = setTimeout(() => { fetchPortfolio().catch(() => { }); portTimeout = null; }, 1000);
+                });
+                ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, () => {
+                    if (!tradeTimeout) tradeTimeout = setTimeout(() => { fetchTrades().catch(() => { }); tradeTimeout = null; }, 2000);
+                });
                 let learningTimeout = null;
                 ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_prices' }, (payload) => handleRealtimePrice(payload));
                 ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, () => {
