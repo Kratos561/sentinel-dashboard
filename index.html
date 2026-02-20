@@ -1270,6 +1270,43 @@
             }
         }
 
+        async function fetchSignals() {
+            try {
+                // Fetch the latest signals/telemetry directly. I am assuming 'ghost_signals' exists. 
+                // If the bot natively writes to another table for signals, the backend handles the table structures.
+                // Based on previous contexts, Sentinel might log this info during 'ghost_reflections' or 'bot_neural_signals'.
+                // Using 'ghost_signals' as a safe default based on standard Sentinel architecture.
+                const { data } = await sb.from('ghost_signals').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
+                if (data) {
+                    const elHyb = document.getElementById('hyb');
+                    const elMl = document.getElementById('ml');
+                    const elDiv = document.getElementById('div-s');
+                    const elLiq = document.getElementById('liq-s');
+
+                    if (elHyb && data.hybrid_confidence) {
+                        const confObj = typeof data.hybrid_confidence === 'string' ? JSON.parse(data.hybrid_confidence) : data.hybrid_confidence;
+                        elHyb.textContent = confObj.score ? confObj.score + '% ' + (confObj.side || '') : '-';
+                        elHyb.style.color = confObj.side === 'BULL' ? 'var(--green)' : confObj.side === 'BEAR' ? 'var(--red)' : 'var(--text-dim)';
+                    }
+                    if (elMl && data.ml_prediction) {
+                        const mlObj = typeof data.ml_prediction === 'string' ? JSON.parse(data.ml_prediction) : data.ml_prediction;
+                        elMl.textContent = mlObj.predict || 'NOISE';
+                        elMl.style.color = mlObj.predict === 'LONG' ? 'var(--green)' : mlObj.predict === 'SHORT' ? 'var(--red)' : 'var(--text-dim)';
+                    }
+                    if (elDiv && data.divergence) {
+                        elDiv.textContent = data.divergence;
+                        elDiv.style.color = data.divergence !== 'NONE' ? 'var(--red)' : 'var(--text-dim)';
+                    }
+                    if (elLiq && data.liquidity) {
+                        elLiq.textContent = data.liquidity;
+                        elLiq.style.color = data.liquidity.includes('HIGH') ? 'var(--blue)' : 'var(--text-dim)';
+                    }
+                }
+            } catch (e) {
+                console.log("Signals not found or structured differently:", e);
+            }
+        }
+
         function renderEq(data) {
             if (!window.Chart) return;
             const ctx = document.getElementById('eqChart').getContext('2d');
@@ -1282,7 +1319,7 @@
         // ═══ FETCH ALL ═══
         async function fetchAll() {
             try {
-                await Promise.allSettled([fetchPortfolio(), fetchTrades(), fetchPrices(), fetchReflection(), fetchLearn()]);
+                await Promise.allSettled([fetchPortfolio(), fetchTrades(), fetchPrices(), fetchReflection(), fetchLearn(), fetchSignals()]);
                 document.getElementById('last-upd').textContent = 'Updated ' + new Date().toLocaleTimeString('es-VE', { timeZone: 'America/Caracas' });
             } catch (e) { document.getElementById('last-upd').textContent = 'Retry...'; }
         }
@@ -1302,6 +1339,10 @@
                 ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_prices' }, (payload) => handleRealtimePrice(payload));
                 ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, () => {
                     if (learningTimeout === null) { learningTimeout = setTimeout(() => { fetchReflection().catch(() => { }); fetchLearn().catch(() => { }); learningTimeout = null; }, 1000); }
+                });
+                let signalTimeout = null;
+                ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_signals' }, () => {
+                    if (!signalTimeout) signalTimeout = setTimeout(() => { fetchSignals().catch(() => { }); signalTimeout = null; }, 1000);
                 });
                 ch.subscribe(status => {
                     if (status === 'SUBSCRIBED') setConn('live');
