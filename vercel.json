@@ -1,12 +1,12 @@
 {
-    "buildCommand": "",
-    "installCommand": "",
-    "outputDirectory": "public",
-    "framework": null,
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
