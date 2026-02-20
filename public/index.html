@@ -610,11 +610,13 @@
                 const c = document.getElementById('particles'), x = c.getContext('2d');
                 let w, h; function resize() { w = c.width = innerWidth; h = c.height = innerHeight; } resize();
                 addEventListener('resize', resize);
-                const pts = Array.from({ length: 35 }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25, r: Math.random() * 1.2 + 0.4 }));
+                const pts = Array.from({ length: 18 }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.2, vy: (Math.random() - 0.5) * 0.2, r: Math.random() * 1.2 + 0.4 }));
+                let frame = 0;
                 function draw() {
+                    if (++frame % 2 !== 0) { requestAnimationFrame(draw); return; }
                     x.clearRect(0, 0, w, h);
                     pts.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > w) p.vx *= -1; if (p.y < 0 || p.y > h) p.vy *= -1; x.beginPath(); x.arc(p.x, p.y, p.r, 0, Math.PI * 2); x.fillStyle = 'rgba(245,165,36,0.1)'; x.fill(); });
-                    pts.forEach((a, i) => { pts.slice(i + 1).forEach(b => { const d = Math.hypot(a.x - b.x, a.y - b.y); if (d < 130) { x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.strokeStyle = 'rgba(245,165,36,' + (0.035 * (1 - d / 130)) + ')'; x.stroke(); } }); });
+                    pts.forEach((a, i) => { pts.slice(i + 1).forEach(b => { const d = Math.hypot(a.x - b.x, a.y - b.y); if (d < 100) { x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.strokeStyle = 'rgba(245,165,36,' + (0.03 * (1 - d / 100)) + ')'; x.stroke(); } }); });
                     requestAnimationFrame(draw);
                 }
                 draw();
@@ -622,7 +624,7 @@
 
         // ═══ SUPABASE ═══
         const SUPABASE_URL = 'https://udqxvsgdgxgtnhxxxcgv.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcXh2c2dkZ3hndG5oeHh4Y2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDUzNDQsImV4cCI6MjA4NDI4MTM0NH0.8JR8R_vUfVl3CYXe9wXK3XjQpTm5mB2N9rjGsT6cHzA';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcXh2c2dkZ3hndG5oeHh4Y2d2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODcwNTM0NCwiZXhwIjoyMDg0MjgxMzQ0fQ.mUKPJvTeG2MU4Fxfddcbcx2Q7H8EDuXcDtWAbHGvT48';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let equityChart = null, rtConn = false, lastBal = null, lastFetch = Date.now();
         const ASSETS = ['ORO', 'BITCOIN', 'SOLANA', 'SUI', 'NASDAQ100', 'SP500'];
