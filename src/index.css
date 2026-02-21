@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Inter", "Roboto Mono", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+  --color-primary: #13c8ec;
+  --color-secondary: #0A0A0A;
+  --color-accent-green: #10B981;
+  --color-accent-red: #EF4444;
+  --color-surface-dark: #0f141a;
+  --color-background-dark: #05080a;
+  --color-background-light: #f8fafc;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background-dark);
+    color: #f8fafc;
+    font-family: var(--font-display);
+    margin: 0;
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(19, 200, 236, 0.05) 0%, transparent 50%),
+      linear-gradient(180deg, #05080a 0%, #030507 100%);
+  }
+}
+
+.glass-panel {
+  background-color: rgba(15, 20, 26, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(19, 200, 236, 0.3);
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink { 
+  50% { opacity: 0; } 
+}
