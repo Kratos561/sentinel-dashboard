@@ -16,15 +16,33 @@ export default function Overview() {
 
     const fetchData = async () => {
         // Fetch current portfolio
-        const { data: pData } = await supabase.from('ghost_portfolio').select('*').order('id', { ascending: false }).limit(50);
+        const { data: pData } = await supabase.from('ghost_portfolio').select('*').limit(1);
         if (pData && pData.length > 0) {
             setPortfolio(pData[0]);
-            // Format history for chart (oldest to newest)
-            const formattedHistory = pData.slice(0, 20).reverse().map(item => ({
-                time: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                balance: Number(item.balance),
-            }));
-            setHistory(formattedHistory);
+
+            // Build equity curve using the last 20 closed trades
+            const { data: tData } = await supabase.from('ghost_trades')
+                .select('closed_at, pnl')
+                .not('closed_at', 'is', null)
+                .order('closed_at', { ascending: false })
+                .limit(20);
+
+            if (tData) {
+                let currentBal = Number(pData[0].balance);
+                const historyData = [];
+                for (let i = 0; i < tData.length; i++) {
+                    historyData.unshift({
+                        time: new Date(tData[i].closed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        balance: Number(currentBal.toFixed(4)),
+                    });
+                    currentBal -= Number(tData[i].pnl) || 0;
+                }
+                historyData.unshift({
+                    time: 'Start',
+                    balance: Number(currentBal.toFixed(4)),
+                });
+                setHistory(historyData);
+            }
         }
 
         // Fetch logs
@@ -48,6 +66,7 @@ export default function Overview() {
     const setupRealtime = () => {
         const ch = supabase.channel('react-overview-dashboard');
         ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, fetchData);
+        ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchData);
         ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, fetchData);
         ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_signals' }, fetchData);
         ch.subscribe();
