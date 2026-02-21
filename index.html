@@ -503,93 +503,167 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
         const SB_URL = 'https://udqxvsgdgxgtnhxxxcgv.supabase.co';
+        // Usamos la Service Key o Anon Key configurada previamente.
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcXh2c2dkZ3hndG5oeHh4Y2d2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODcwNTM0NCwiZXhwIjoyMDg0MjgxMzQ0fQ.mUKPJvTeG2MU4Fxfddcbcx2Q7H8EDuXcDtWAbHGvT48';
         const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
         async function fetchPortfolio() {
-            const { data } = await sb.from('ghost_portfolio').select('*').order('id', { ascending: false }).limit(1);
-            if (!data || !data[0]) return;
-            const p = data[0], bal = +p.balance, start = +p.start_balance, pnl = bal - start;
-            const tot = (+p.wins) + (+p.losses);
-            const wr = tot > 0 ? ((p.wins / tot) * 100).toFixed(1) : '0';
+            try {
+                const { data } = await sb.from('ghost_portfolio').select('*').order('id', { ascending: false }).limit(1);
+                if (!data || !data[0]) return;
+                const p = data[0], bal = +p.balance, start = +p.start_balance, pnl = bal - start;
+                const tot = (+p.wins) + (+p.losses);
+                const wr = tot > 0 ? ((p.wins / tot) * 100).toFixed(1) : '0';
 
-            document.getElementById('dash-balance').innerText = '$' + bal.toFixed(2);
+                document.getElementById('dash-balance').innerText = '$' + bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            const pnlEl = document.getElementById('dash-pnl');
-            pnlEl.innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
-            pnlEl.style.color = pnl >= 0 ? '#10B981' : '#EF4444';
+                const pnlEl = document.getElementById('dash-pnl');
+                pnlEl.innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                pnlEl.style.color = pnl >= 0 ? '#10B981' : '#EF4444';
 
-            const pctEl = document.getElementById('dash-pnl-pct');
-            const pct = start > 0 ? ((pnl / start) * 100).toFixed(2) : 0;
-            pctEl.innerText = (pnl >= 0 ? '+' : '') + pct + '% (Session)';
-            pctEl.style.color = pnl >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)';
+                const pctEl = document.getElementById('dash-pnl-pct');
+                const pct = start > 0 ? ((pnl / start) * 100).toFixed(2) : 0;
+                pctEl.innerText = (pnl >= 0 ? '+' : '') + pct + '% (Session)';
+                pctEl.style.color = pnl >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)';
 
-            document.getElementById('dash-winrate').innerText = wr + '%';
-            document.getElementById('dash-trades').innerText = tot;
-            document.getElementById('dash-total-pnl').innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
-            document.getElementById('dash-total-pnl').style.color = pnl >= 0 ? '#10B981' : '#EF4444';
+                document.getElementById('dash-winrate').innerText = wr + '%';
+                document.getElementById('dash-trades').innerText = tot;
+
+                const totalPnlEl = document.getElementById('dash-total-pnl');
+                totalPnlEl.innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                totalPnlEl.style.color = pnl >= 0 ? '#10B981' : '#EF4444';
+            } catch (e) { console.error('Error portfolio:', e); }
         }
 
         async function fetchTrades() {
-            const { data: open } = await sb.from('ghost_trades').select('*').eq('status', 'OPEN').order('opened_at', { ascending: false });
-            const posEl = document.getElementById('dash-positions');
-            if (open && open.length > 0) {
-                posEl.innerHTML = open.map(t => `
-                <tr class="hover:bg-white/5 transition-colors group">
-                    <td class="px-6 py-4"><p class="font-bold text-white">${t.asset}</p></td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${t.direction === 'LONG' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' : 'bg-accent-red/10 text-accent-red border-accent-red/20'} border">
-                            ${t.direction}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 font-mono text-slate-300">$${(+t.entry_price).toFixed(2)}</td>
-                    <td class="px-6 py-4 font-mono text-white">...</td>
-                    <td class="px-6 py-4 font-mono text-slate-500">OPEN</td>
-                    <td class="px-6 py-4 text-right">
-                        <button class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white">Active</button>
-                    </td>
-                </tr>
-            `).join('');
-            } else {
-                posEl.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">🔭 Scanning for perfect setups...</td></tr>';
-            }
+            try {
+                const { data: open } = await sb.from('ghost_trades').select('*').eq('status', 'OPEN').order('opened_at', { ascending: false });
+                const posEl = document.getElementById('dash-positions');
+                if (open && open.length > 0) {
+                    posEl.innerHTML = open.map(t => {
+                        const isLong = t.direction === 'LONG';
+                        const badgeClass = isLong ? 'bg-accent-green/10 text-accent-green border-accent-green/20' : 'bg-accent-red/10 text-accent-red border-accent-red/20';
+                        return `
+                        <tr class="hover:bg-white/5 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-surface-dark flex items-center justify-center p-1 border border-white/5">
+                                        <span class="material-symbols-outlined text-xs text-primary">currency_bitcoin</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-white">${t.asset}</p>
+                                        <p class="text-xs text-slate-500">Auto</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass} border">
+                                    ${t.direction}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 font-mono text-slate-300">$${(+t.entry_price).toFixed(2)}</td>
+                            <td class="px-6 py-4 font-mono text-white">LIVE</td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs text-primary/80">Active</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 transition-all opacity-50 cursor-not-allowed">
+                                    Auto
+                                </button>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('');
+                } else {
+                    posEl.innerHTML = '<tr class="hover:bg-transparent"><td colspan="6" class="px-6 py-8"><div class="flex flex-col items-center justify-center"><div class="h-10 w-10 flex items-center justify-center rounded-full border border-dashed border-white/10 text-slate-500 animate-spin-slow mb-3"><span class="material-symbols-outlined">radar</span></div><p class="text-slate-500 font-mono text-xs uppercase tracking-widest">🔭 Scanning for perfect setups...</p><p class="text-slate-600 text-[10px] mt-1">Waiting for signal confirmation</p></div></td></tr>';
+                }
+            } catch (e) { console.error('Error trades:', e); }
         }
 
         async function fetchLog() {
-            const { data } = await sb.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(6);
-            const logEl = document.getElementById('dash-log');
-            if (data && data.length > 0) {
-                logEl.innerHTML = data.map(d => {
-                    const time = new Date(d.created_at).toLocaleTimeString();
-                    return \`<div class="flex gap-2 mb-2"><span class="text-slate-600">[\${time}]</span><span class="\${d.analysis.includes('WIN') ? 'text-accent-green' : 'text-slate-400'}">\${d.analysis}</span></div>\`;
-            }).join('') + '<div class="flex gap-2"><span class="text-primary cursor-blink">_</span></div>';
-        }
-    }
-
-    async function fetchSignals() {
-        const { data } = await sb.from('ghost_signals').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
-        if(data && data.ml_prediction) {
             try {
-                const mlObj = typeof data.ml_prediction === 'string' ? JSON.parse(data.ml_prediction) : data.ml_prediction;
-                if(mlObj.score) document.getElementById('dash-ml-score').innerText = (mlObj.score * 100).toFixed(0) + '%';
-                if(mlObj.predict) {
-                    const textEl = document.getElementById('dash-ml-text');
-                    textEl.innerText = mlObj.predict;
-                    textEl.style.color = mlObj.predict === 'LONG' || mlObj.predict === 'BULLISH' ? '#10B981' : '#EF4444';
+                const { data } = await sb.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(5);
+                const logEl = document.getElementById('dash-log');
+                if (data && data.length > 0) {
+                    logEl.innerHTML = data.map(d => {
+                        const time = new Date(d.created_at).toLocaleTimeString();
+                        const colorClass = d.analysis.includes('WIN') || d.analysis.includes('COMPLETED') ? 'text-accent-green' : 'text-slate-400';
+                        return `<div class="flex gap-2 mb-2"><span class="text-slate-600 shrink-0">[${time}]</span><span class="${colorClass}">${d.analysis}</span></div>`;
+                    }).join('');
+
+                    // Add blinking cursor
+                    logEl.innerHTML += `<div class="flex gap-2 mt-2"><span class="text-slate-600">Sentinel &gt;</span><span class="text-primary cursor-blink">_</span></div>`;
                 }
-            } catch(e) {}
+            } catch (e) { console.error('Error logs:', e); }
         }
-    }
 
-    function init() {
-        fetchPortfolio();
-        fetchTrades();
-        fetchLog();
-        fetchSignals();
-    }
+        async function fetchSignals() {
+            try {
+                const { data } = await sb.from('ghost_signals').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
+                if (data && data.ml_prediction) {
+                    const mlObj = typeof data.ml_prediction === 'string' ? JSON.parse(data.ml_prediction) : data.ml_prediction;
+                    if (mlObj.score) {
+                        const scorePct = (mlObj.score * 100).toFixed(0);
+                        document.getElementById('dash-ml-score').innerText = scorePct + '%';
 
-    init();
-    setInterval(init, 5000); // Polling every 5 sec for fluid real-time data
+                        // Attempt to update the SVG circle dashoffset
+                        const circle = document.querySelector('circle.drop-shadow-\\[0_0_8px_rgba\\(19\\,200\\,236\\,0\\.6\\)\\]');
+                        if (circle) {
+                            // Circumference of r=56 is ~351.86
+                            const dashoffset = 351.86 - (351.86 * mlObj.score);
+                            circle.style.strokeDashoffset = dashoffset;
+                        }
+                    }
+                    if (mlObj.predict) {
+                        const textEl = document.getElementById('dash-ml-text');
+                        textEl.innerText = mlObj.predict;
+                        textEl.style.color = mlObj.predict.includes('LONG') || mlObj.predict.includes('BULL') ? '#10B981' : (mlObj.predict.includes('SHORT') || mlObj.predict.includes('BEAR') ? '#EF4444' : '#13c8ec');
+                    }
+                }
+            } catch (e) { console.error('Error signals:', e); }
+        }
+
+        function initData() {
+            fetchPortfolio();
+            fetchTrades();
+            fetchLog();
+            fetchSignals();
+        }
+
+        function setupRealtime() {
+            const ch = sb.channel('fluid-rt-dashboard');
+            let debouncePort = null, debounceTrade = null, debounceLog = null, debounceSig = null;
+
+            ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, () => {
+                clearTimeout(debouncePort); debouncePort = setTimeout(fetchPortfolio, 500);
+            });
+            ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, () => {
+                clearTimeout(debounceTrade); debounceTrade = setTimeout(fetchTrades, 500);
+            });
+            ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, () => {
+                clearTimeout(debounceLog); debounceLog = setTimeout(fetchLog, 500);
+            });
+            ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_signals' }, () => {
+                clearTimeout(debounceSig); debounceSig = setTimeout(fetchSignals, 500);
+            });
+
+            ch.subscribe((status) => {
+                console.log('Supabase Realtime Status:', status);
+                if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                    // Retry connection if dropped
+                    setTimeout(setupRealtime, 5000);
+                }
+            });
+        }
+
+        // Initialize
+        initData();
+        setupRealtime();
+
+        // Background polling fallback every 15s
+        setInterval(initData, 15000);
     </script>
 </body>
 
