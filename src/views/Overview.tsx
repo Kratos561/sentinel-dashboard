@@ -119,8 +119,8 @@ export default function Overview() {
                         <p className="text-xs text-slate-500 mt-1">Real-time portfolio growth tracking</p>
                     </div>
                 </div>
-                <div className="flex-1 w-full min-h-[250px] relative">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="flex-1 w-full h-[300px] min-h-[250px] relative">
+                    <ResponsiveContainer width="100%" height={300} minHeight={250}>
                         <AreaChart data={history} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">

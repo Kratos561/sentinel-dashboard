@@ -71,7 +71,7 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto relative bg-background-dark">
         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 via-background-dark/50 to-background-dark pointer-events-none z-0"></div>
-        <div className="relative z-10 p-4 md:p-8 max-w-[1600px] mx-auto flex flex-col gap-6 min-h-full">
+        <div className="relative z-10 p-4 pb-24 md:p-8 max-w-[1600px] mx-auto flex flex-col gap-6 min-h-full">
 
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
             <div>
@@ -95,6 +95,25 @@ function App() {
           {activeTab === 'history' && <div className="glass-panel p-10 text-center text-slate-400 rounded-2xl">History Module - In Development</div>}
           {activeTab === 'settings' && <div className="glass-panel p-10 text-center text-slate-400 rounded-2xl">Settings Panel - In Development</div>}
 
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-[#05080a] border-t border-white/5 z-50 flex items-center justify-around px-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'text-primary' : 'text-slate-500'
+                  }`}
+              >
+                <Icon size={20} className={isActive ? 'text-primary drop-shadow-[0_0_8px_rgba(19,200,236,0.6)]' : ''} />
+                <span className="text-[10px] mt-1 font-medium">{item.label.split(' ')[0]}</span>
+              </button>
+            )
+          })}
         </div>
       </main>
     </div>
