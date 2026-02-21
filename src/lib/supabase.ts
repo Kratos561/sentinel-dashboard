@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SB_URL = 'https://udqxvsgdgxgtnhxxxcgv.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcXh2c2dkZ3hndG5oeHh4Y2d2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODcwNTM0NCwiZXhwIjoyMDg0MjgxMzQ0fQ.mUKPJvTeG2MU4Fxfddcbcx2Q7H8EDuXcDtWAbHGvT48';
+// Llave Pública (Anon / Publishable) SEGURA para Vercel y Dashboards React
+const SB_KEY = 'sb_publishable_gNx13J0yKxHjVDQUjwyOYQ_ul3vrHvb';
 
 export const supabase = createClient(SB_URL, SB_KEY);
