@@ -31,14 +31,16 @@ export default function Overview() {
                 let currentBal = Number(pData[0].balance);
                 const historyData = [];
                 for (let i = 0; i < tData.length; i++) {
+                    // Safe parsing for Safari/webkit (strip microsecond fractions)
+                    const cleanDateStr = tData[i].closed_at.split('.')[0] + 'Z';
                     historyData.unshift({
-                        time: new Date(tData[i].closed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        time: new Date(cleanDateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         balance: Number(currentBal.toFixed(4)),
                     });
                     currentBal -= Number(tData[i].pnl) || 0;
                 }
                 historyData.unshift({
-                    time: 'Start',
+                    time: 'T0',
                     balance: Number(currentBal.toFixed(4)),
                 });
                 setHistory(historyData);
