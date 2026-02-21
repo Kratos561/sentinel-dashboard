@@ -1,20 +1,28 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Sentinel AI Trading Overview</title>
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Tailwind Config -->
-<script>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sentinel AI Trading Overview</title>
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto+Mono:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Config -->
+    <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -32,9 +40,9 @@
                         "mono": ["Roboto Mono", "monospace"],
                     },
                     borderRadius: {
-                        "DEFAULT": "1rem", 
-                        "lg": "1.5rem", 
-                        "xl": "2rem", 
+                        "DEFAULT": "1rem",
+                        "lg": "1.5rem",
+                        "xl": "2rem",
                         "2xl": "2.5rem",
                         "full": "9999px"
                     },
@@ -47,21 +55,24 @@
             },
         }
     </script>
-<style>
+    <style>
         /* Custom scrollbar for webkit */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
+
         ::-webkit-scrollbar-track {
-            background: #0A0A0A; 
+            background: #0A0A0A;
         }
+
         ::-webkit-scrollbar-thumb {
-            background: #1f2e32; 
+            background: #1f2e32;
             border-radius: 3px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
-            background: #2a3f45; 
+            background: #2a3f45;
         }
 
         /* Glassmorphism utility */
@@ -78,7 +89,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .animate-pulse-slow {
             animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
@@ -95,336 +106,491 @@
         }
 
         @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen overflow-hidden flex flex-col md:flex-row">
-<!-- Mobile Header -->
-<div class="md:hidden flex items-center justify-between p-4 bg-background-dark border-b border-white/5">
-<div class="flex items-center gap-2">
-<div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shadow-glow-sm">
-<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
-</div>
-<h1 class="text-white font-bold tracking-tight">Sentinel</h1>
-</div>
-<button class="text-white/70 hover:text-white">
-<span class="material-symbols-outlined">menu</span>
-</button>
-</div>
-<!-- Sidebar Navigation -->
-<nav class="hidden md:flex flex-col w-20 lg:w-64 h-screen border-r border-white/5 bg-background-dark sticky top-0 shrink-0 z-50">
-<div class="p-6 flex items-center gap-3 mb-8">
-<div class="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary shadow-glow relative shrink-0">
-<span class="material-symbols-outlined">rocket_launch</span>
-<div class="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background-dark"></div>
-</div>
-<div class="hidden lg:flex flex-col">
-<h1 class="text-white font-bold text-lg tracking-tight leading-none">Sentinel</h1>
-<p class="text-primary/70 text-xs font-mono mt-1">v2.4 ONLINE</p>
-</div>
-</div>
-<div class="flex-1 flex flex-col gap-2 px-3">
-<a class="flex items-center gap-3 px-3 py-3 rounded-xl bg-primary/10 border border-primary/20 text-white shadow-glow-sm group transition-all" href="#">
-<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">dashboard</span>
-<span class="hidden lg:block text-sm font-medium">Overview</span>
-</a>
-<a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">show_chart</span>
-<span class="hidden lg:block text-sm font-medium">Active Trades</span>
-</a>
-<a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">psychology</span>
-<span class="hidden lg:block text-sm font-medium">AI Intel</span>
-</a>
-<a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">history</span>
-<span class="hidden lg:block text-sm font-medium">History</span>
-</a>
-</div>
-<div class="p-3 mt-auto">
-<a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
-<span class="hidden lg:block text-sm font-medium">Settings</span>
-</a>
-<div class="mt-4 pt-4 border-t border-white/5 px-3 flex items-center gap-3 hidden lg:flex">
-<div class="h-8 w-8 rounded-full bg-slate-700 bg-cover bg-center" data-alt="User profile avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCun-7LbxvZflq4rwZ_1csJDnMofApf_3UsFVC2OVSoCr-4nE9xcfv-XMGz2sa728FamZ3eNn2tBb8oTqybNqmjGy_rOw6JEc5_EsEuHoNx-ulwf1blSKr-uMTJ9f27BLncZpGrzg8xwOSs2DZrkEeDHlTL93QnFI3HMWp2-S0hBJpL0on6dWZGP_n2EXl3c4maK0bil2fBIi4InQCnkW8fdfm0H2p8WW0t57YM_UV-E8KdvEfmfBNI0q6qLmFwwHOaBtp8skAnPynx')"></div>
-<div class="flex flex-col">
-<p class="text-xs text-white font-medium">Alex Trader</p>
-<p class="text-[10px] text-slate-500">Pro Account</p>
-</div>
-</div>
-</div>
-</nav>
-<!-- Main Content Area -->
-<main class="flex-1 overflow-y-auto h-screen relative bg-background-dark">
-<!-- Background Gradient Glow -->
-<div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 via-background-dark/50 to-background-dark pointer-events-none z-0"></div>
-<div class="relative z-10 p-4 md:p-8 max-w-[1600px] mx-auto flex flex-col gap-6">
-<!-- Header -->
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-<div>
-<h2 class="text-2xl font-bold text-white tracking-tight">Market Overview</h2>
-<p class="text-slate-400 text-sm mt-1">Real-time AI analysis and portfolio tracking</p>
-</div>
-<div class="flex items-center gap-3">
-<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-green/10 border border-accent-green/20">
-<div class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></div>
-<span class="text-xs font-medium text-accent-green font-mono">SYSTEM ONLINE</span>
-</div>
-<button class="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-colors">
-<span class="material-symbols-outlined text-[20px]">notifications</span>
-</button>
-</div>
-</div>
-<!-- Top Grid: Stats & Charts -->
-<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-<!-- Card 1: Balance & PNL -->
-<div class="glass-panel rounded-2xl p-6 md:col-span-8 lg:col-span-5 relative overflow-hidden group">
-<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
-<div class="flex justify-between items-start mb-6 relative z-10">
-<div>
-<p class="text-slate-400 text-sm font-medium mb-1">Total Balance</p>
-<h3 class="text-3xl font-bold text-white tracking-tight font-mono">$124,592.42</h3>
-</div>
-<div class="text-right">
-<p class="text-slate-400 text-sm font-medium mb-1">Daily PNL</p>
-<div class="flex items-center justify-end gap-1 text-accent-green">
-<span class="material-symbols-outlined text-sm">trending_up</span>
-<span class="font-mono font-bold">+$1,250.00</span>
-</div>
-<p class="text-xs text-accent-green/80 mt-0.5">+4.2% (24h)</p>
-</div>
-</div>
-<!-- Glowing Sparkline -->
-<div class="h-24 w-full relative">
-<div class="absolute inset-0 bg-gradient-to-t from-accent-green/5 to-transparent"></div>
-<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 40">
-<!-- Gradient Definition -->
-<defs>
-<lineargradient id="sparkline-gradient" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="#10B981" stop-opacity="0.2"></stop>
-<stop offset="100%" stop-color="#10B981" stop-opacity="0"></stop>
-</lineargradient>
-<filter height="140%" id="glow" width="140%" x="-20%" y="-20%">
-<fegaussianblur result="coloredBlur" stddeviation="2"></fegaussianblur>
-<femerge>
-<femergenode in="coloredBlur"></femergenode>
-<femergenode in="SourceGraphic"></femergenode>
-</femerge>
-</filter>
-</defs>
-<path d="M0 35 L10 32 L20 36 L30 25 L40 28 L50 15 L60 18 L70 10 L80 12 L90 5 L100 2" fill="url(#sparkline-gradient)" stroke="none"></path>
-<path d="M0 35 L10 32 L20 36 L30 25 L40 28 L50 15 L60 18 L70 10 L80 12 L90 5 L100 2" fill="none" filter="url(#glow)" stroke="#10B981" stroke-width="2" vector-effect="non-scaling-stroke"></path>
-<circle class="animate-pulse shadow-glow-green" cx="100" cy="2" fill="#10B981" r="3"></circle>
-</svg>
-</div>
-</div>
-<!-- Card 2: AI Sentiment Meter -->
-<div class="glass-panel rounded-2xl p-6 md:col-span-4 lg:col-span-3 flex flex-col items-center justify-center relative overflow-hidden">
-<div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
-<div class="relative w-32 h-32 mb-4">
-<svg class="w-full h-full transform -rotate-90">
-<!-- Background Circle -->
-<circle cx="64" cy="64" fill="none" r="56" stroke="rgba(255,255,255,0.05)" stroke-width="8"></circle>
-<!-- Progress Circle (75%) -->
-<circle class="drop-shadow-[0_0_8px_rgba(19,200,236,0.6)]" cx="64" cy="64" fill="none" r="56" stroke="#13c8ec" stroke-dasharray="351.86" stroke-dashoffset="87.96" stroke-linecap="round" stroke-width="8"></circle>
-</svg>
-<div class="absolute inset-0 flex flex-col items-center justify-center">
-<span class="text-2xl font-bold text-white font-mono">75%</span>
-</div>
-</div>
-<h3 class="text-white font-medium mb-1">Market Sentiment</h3>
-<p class="text-primary text-sm font-semibold tracking-wide uppercase shadow-glow-sm">Bullish</p>
-</div>
-<!-- Card 3: AI Console Log -->
-<div class="glass-panel rounded-2xl p-0 md:col-span-12 lg:col-span-4 flex flex-col overflow-hidden border border-primary/20 bg-[#05080a]">
-<div class="bg-surface-dark px-4 py-3 border-b border-white/5 flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-sm">terminal</span>
-<span class="text-xs font-mono text-slate-300 uppercase tracking-wider">AI Decision Log</span>
-</div>
-<div class="flex gap-1.5">
-<div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-</div>
-</div>
-<div class="p-4 font-mono text-xs flex-1 overflow-y-auto h-[180px] space-y-2 text-slate-400">
-<div class="flex gap-2">
-<span class="text-slate-600">[10:41:58]</span>
-<span>Analyzing volume spike on <span class="text-white">ETH-USDT</span>...</span>
-</div>
-<div class="flex gap-2">
-<span class="text-slate-600">[10:42:01]</span>
-<span>RSI divergence detected (15m).</span>
-</div>
-<div class="flex gap-2">
-<span class="text-slate-600">[10:42:05]</span>
-<span class="text-primary">Calculating optimal entry zone...</span>
-</div>
-<div class="flex gap-2">
-<span class="text-slate-600">[10:42:08]</span>
-<span><span class="text-accent-green">BUY ORDER EXECUTED</span> @ 1842.50</span>
-</div>
-<div class="flex gap-2">
-<span class="text-slate-600">[10:42:12]</span>
-<span>Setting stop-loss at 1820.00 <span class="cursor-blink"></span></span>
-</div>
-</div>
-</div>
-</div>
-<!-- Middle Section: Active Positions Table -->
-<div class="glass-panel rounded-2xl overflow-hidden border border-white/5 flex flex-col">
-<div class="p-6 border-b border-white/5 flex justify-between items-center">
-<h3 class="text-lg font-semibold text-white">Active Positions</h3>
-<button class="text-xs text-primary hover:text-white transition-colors flex items-center gap-1 font-medium">
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen overflow-hidden flex flex-col md:flex-row">
+    <!-- Mobile Header -->
+    <div class="md:hidden flex items-center justify-between p-4 bg-background-dark border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <div
+                class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shadow-glow-sm">
+                <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+            </div>
+            <h1 class="text-white font-bold tracking-tight">Sentinel</h1>
+        </div>
+        <button class="text-white/70 hover:text-white">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+    </div>
+    <!-- Sidebar Navigation -->
+    <nav
+        class="hidden md:flex flex-col w-20 lg:w-64 h-screen border-r border-white/5 bg-background-dark sticky top-0 shrink-0 z-50">
+        <div class="p-6 flex items-center gap-3 mb-8">
+            <div
+                class="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary shadow-glow relative shrink-0">
+                <span class="material-symbols-outlined">rocket_launch</span>
+                <div
+                    class="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background-dark">
+                </div>
+            </div>
+            <div class="hidden lg:flex flex-col">
+                <h1 class="text-white font-bold text-lg tracking-tight leading-none">Sentinel</h1>
+                <p class="text-primary/70 text-xs font-mono mt-1">v2.4 ONLINE</p>
+            </div>
+        </div>
+        <div class="flex-1 flex flex-col gap-2 px-3">
+            <a class="flex items-center gap-3 px-3 py-3 rounded-xl bg-primary/10 border border-primary/20 text-white shadow-glow-sm group transition-all"
+                href="#">
+                <span
+                    class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">dashboard</span>
+                <span class="hidden lg:block text-sm font-medium">Overview</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
+                href="#">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">show_chart</span>
+                <span class="hidden lg:block text-sm font-medium">Active Trades</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
+                href="#">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">psychology</span>
+                <span class="hidden lg:block text-sm font-medium">AI Intel</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
+                href="#">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">history</span>
+                <span class="hidden lg:block text-sm font-medium">History</span>
+            </a>
+        </div>
+        <div class="p-3 mt-auto">
+            <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
+                href="#">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+                <span class="hidden lg:block text-sm font-medium">Settings</span>
+            </a>
+            <div class="mt-4 pt-4 border-t border-white/5 px-3 flex items-center gap-3 hidden lg:flex">
+                <div class="h-8 w-8 rounded-full bg-slate-700 bg-cover bg-center" data-alt="User profile avatar"
+                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCun-7LbxvZflq4rwZ_1csJDnMofApf_3UsFVC2OVSoCr-4nE9xcfv-XMGz2sa728FamZ3eNn2tBb8oTqybNqmjGy_rOw6JEc5_EsEuHoNx-ulwf1blSKr-uMTJ9f27BLncZpGrzg8xwOSs2DZrkEeDHlTL93QnFI3HMWp2-S0hBJpL0on6dWZGP_n2EXl3c4maK0bil2fBIi4InQCnkW8fdfm0H2p8WW0t57YM_UV-E8KdvEfmfBNI0q6qLmFwwHOaBtp8skAnPynx')">
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-xs text-white font-medium">Alex Trader</p>
+                    <p class="text-[10px] text-slate-500">Pro Account</p>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto h-screen relative bg-background-dark">
+        <!-- Background Gradient Glow -->
+        <div
+            class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 via-background-dark/50 to-background-dark pointer-events-none z-0">
+        </div>
+        <div class="relative z-10 p-4 md:p-8 max-w-[1600px] mx-auto flex flex-col gap-6">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+                <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Market Overview</h2>
+                    <p class="text-slate-400 text-sm mt-1">Real-time AI analysis and portfolio tracking</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-green/10 border border-accent-green/20">
+                        <div class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></div>
+                        <span class="text-xs font-medium text-accent-green font-mono">SYSTEM ONLINE</span>
+                    </div>
+                    <button
+                        class="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">notifications</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Top Grid: Stats & Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- Card 1: Balance & PNL -->
+                <div class="glass-panel rounded-2xl p-6 md:col-span-8 lg:col-span-5 relative overflow-hidden group">
+                    <div
+                        class="absolute -right-10 -top-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700">
+                    </div>
+                    <div class="flex justify-between items-start mb-6 relative z-10">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium mb-1">Total Balance</p>
+                            <h3 id="dash-balance" class="text-3xl font-bold text-white tracking-tight font-mono">
+                                Syncing...</h3>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-slate-400 text-sm font-medium mb-1">Daily PNL</p>
+                            <div class="flex items-center justify-end gap-1 text-accent-green">
+                                <span class="material-symbols-outlined text-sm">trending_up</span>
+                                <span id="dash-pnl" class="font-mono font-bold">...</span>
+                            </div>
+                            <p id="dash-pnl-pct" class="text-xs text-accent-green/80 mt-0.5">... (24h)</p>
+                        </div>
+                    </div>
+                    <!-- Glowing Sparkline -->
+                    <div class="h-24 w-full relative">
+                        <div class="absolute inset-0 bg-gradient-to-t from-accent-green/5 to-transparent"></div>
+                        <svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 40">
+                            <!-- Gradient Definition -->
+                            <defs>
+                                <lineargradient id="sparkline-gradient" x1="0" x2="0" y1="0" y2="1">
+                                    <stop offset="0%" stop-color="#10B981" stop-opacity="0.2"></stop>
+                                    <stop offset="100%" stop-color="#10B981" stop-opacity="0"></stop>
+                                </lineargradient>
+                                <filter height="140%" id="glow" width="140%" x="-20%" y="-20%">
+                                    <fegaussianblur result="coloredBlur" stddeviation="2"></fegaussianblur>
+                                    <femerge>
+                                        <femergenode in="coloredBlur"></femergenode>
+                                        <femergenode in="SourceGraphic"></femergenode>
+                                    </femerge>
+                                </filter>
+                            </defs>
+                            <path d="M0 35 L10 32 L20 36 L30 25 L40 28 L50 15 L60 18 L70 10 L80 12 L90 5 L100 2"
+                                fill="url(#sparkline-gradient)" stroke="none"></path>
+                            <path d="M0 35 L10 32 L20 36 L30 25 L40 28 L50 15 L60 18 L70 10 L80 12 L90 5 L100 2"
+                                fill="none" filter="url(#glow)" stroke="#10B981" stroke-width="2"
+                                vector-effect="non-scaling-stroke"></path>
+                            <circle class="animate-pulse shadow-glow-green" cx="100" cy="2" fill="#10B981" r="3">
+                            </circle>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Card 2: AI Sentiment Meter -->
+                <div
+                    class="glass-panel rounded-2xl p-6 md:col-span-4 lg:col-span-3 flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
+                    <div class="relative w-32 h-32 mb-4">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <!-- Background Circle -->
+                            <circle cx="64" cy="64" fill="none" r="56" stroke="rgba(255,255,255,0.05)" stroke-width="8">
+                            </circle>
+                            <!-- Progress Circle (75%) -->
+                            <circle class="drop-shadow-[0_0_8px_rgba(19,200,236,0.6)]" cx="64" cy="64" fill="none"
+                                r="56" stroke="#13c8ec" stroke-dasharray="351.86" stroke-dashoffset="87.96"
+                                stroke-linecap="round" stroke-width="8"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="dash-ml-score" class="text-2xl font-bold text-white font-mono">--%</span>
+                        </div>
+                    </div>
+                    <h3 class="text-white font-medium mb-1">Market Sentiment</h3>
+                    <p id="dash-ml-text"
+                        class="text-primary text-sm font-semibold tracking-wide uppercase shadow-glow-sm">WAITING...</p>
+                </div>
+                <!-- Card 3: AI Console Log -->
+                <div
+                    class="glass-panel rounded-2xl p-0 md:col-span-12 lg:col-span-4 flex flex-col overflow-hidden border border-primary/20 bg-[#05080a]">
+                    <div class="bg-surface-dark px-4 py-3 border-b border-white/5 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-sm">terminal</span>
+                            <span class="text-xs font-mono text-slate-300 uppercase tracking-wider">AI Decision
+                                Log</span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                        </div>
+                    </div>
+                    <div id="dash-log"
+                        class="p-4 font-mono text-xs flex-1 overflow-y-auto h-[180px] space-y-2 text-slate-400">
+                        <div class="flex gap-2">
+                            <span class="text-slate-600">[10:41:58]</span>
+                            <span>Analyzing volume spike on <span class="text-white">ETH-USDT</span>...</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="text-slate-600">[10:42:01]</span>
+                            <span>RSI divergence detected (15m).</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="text-slate-600">[10:42:05]</span>
+                            <span class="text-primary">Calculating optimal entry zone...</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="text-slate-600">[10:42:08]</span>
+                            <span><span class="text-accent-green">BUY ORDER EXECUTED</span> @ 1842.50</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="text-slate-600">[10:42:12]</span>
+                            <span>Setting stop-loss at 1820.00 <span class="cursor-blink"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Middle Section: Active Positions Table -->
+            <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 flex flex-col">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-white">Active Positions</h3>
+                    <button
+                        class="text-xs text-primary hover:text-white transition-colors flex items-center gap-1 font-medium">
                         VIEW ALL <span class="material-symbols-outlined text-sm">arrow_forward</span>
-</button>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-white/5 text-xs text-slate-400 uppercase tracking-wider font-medium">
-<th class="px-6 py-4">Pair</th>
-<th class="px-6 py-4">Type</th>
-<th class="px-6 py-4">Entry Price</th>
-<th class="px-6 py-4">Mark Price</th>
-<th class="px-6 py-4">PNL (ROE%)</th>
-<th class="px-6 py-4 text-right">Action</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-white/5 text-sm">
-<tr class="hover:bg-white/5 transition-colors group">
-<td class="px-6 py-4">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
-<img alt="Bitcoin" class="w-full h-full" data-alt="Bitcoin logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZHAJeK2aBUBkSPXUl-AxX9nR3z5VSVenWM4jlCly0DTa4cgcp19LJvYaw5bxXG81kP321muzLWciGANOszLCJ7dqkivgPimZdGTcnzDqVU0Op6BZ7hMjxXjbw7UNcDN-jPvPSLge6XNxY0-asgOhQGsYaOtctzUanukN4-4ZcMK955LE53llZxoL7TiHoSNqEJE4z6nJhNX7ftJqGkfyRD1uhMCqBSDkTEPGihlM7xZounrl2-QWMnos3pibxt9YaTwrUQnkrJ-18"/>
-</div>
-<div>
-<p class="font-bold text-white">BTC/USDT</p>
-<p class="text-xs text-slate-500">Iso 10x</p>
-</div>
-</div>
-</td>
-<td class="px-6 py-4">
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent-green/10 text-accent-green border border-accent-green/20">
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-white/5 text-xs text-slate-400 uppercase tracking-wider font-medium">
+                                <th class="px-6 py-4">Pair</th>
+                                <th class="px-6 py-4">Type</th>
+                                <th class="px-6 py-4">Entry Price</th>
+                                <th class="px-6 py-4">Mark Price</th>
+                                <th class="px-6 py-4">PNL (ROE%)</th>
+                                <th class="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-positions" class="divide-y divide-white/5 text-sm">
+                            <tr class="hover:bg-white/5 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
+                                            <img alt="Bitcoin" class="w-full h-full" data-alt="Bitcoin logo"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZHAJeK2aBUBkSPXUl-AxX9nR3z5VSVenWM4jlCly0DTa4cgcp19LJvYaw5bxXG81kP321muzLWciGANOszLCJ7dqkivgPimZdGTcnzDqVU0Op6BZ7hMjxXjbw7UNcDN-jPvPSLge6XNxY0-asgOhQGsYaOtctzUanukN4-4ZcMK955LE53llZxoL7TiHoSNqEJE4z6nJhNX7ftJqGkfyRD1uhMCqBSDkTEPGihlM7xZounrl2-QWMnos3pibxt9YaTwrUQnkrJ-18" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-white">BTC/USDT</p>
+                                            <p class="text-xs text-slate-500">Iso 10x</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent-green/10 text-accent-green border border-accent-green/20">
                                         LONG
                                     </span>
-</td>
-<td class="px-6 py-4 font-mono text-slate-300">$42,100.50</td>
-<td class="px-6 py-4 font-mono text-white">$44,350.20</td>
-<td class="px-6 py-4">
-<div class="flex flex-col">
-<span class="font-mono font-bold text-accent-green">+$2,249.70</span>
-<span class="font-mono text-xs text-accent-green/80">+5.34%</span>
-</div>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 hover:border-white/20 transition-all">
+                                </td>
+                                <td class="px-6 py-4 font-mono text-slate-300">$42,100.50</td>
+                                <td class="px-6 py-4 font-mono text-white">$44,350.20</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-mono font-bold text-accent-green">+$2,249.70</span>
+                                        <span class="font-mono text-xs text-accent-green/80">+5.34%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button
+                                        class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 hover:border-white/20 transition-all">
                                         Close
                                     </button>
-</td>
-</tr>
-<tr class="hover:bg-white/5 transition-colors group">
-<td class="px-6 py-4">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden p-1">
-<img alt="Ethereum" class="w-full h-full" data-alt="Ethereum logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7MVJw3RdhT3ETGzXpZ1u_m3LZQBAsp0bUJYntx1Nn8zjZ_Sw69zRCDV-rpgv7pVWbY2WlrKZUvy8sq-pQGygGNETPNv6NfxhVr2p2ecCUeY6ii1ToJyS5dbCxHf9Fsh6sZlIy93tkyelHgYAFdOkzvfGmsdgTcxAN0-N4Sw-xJ2fhOVysyPJp9NDUAqhic668aRdHXZDKdEJQi_77he3F3TR_1Sd9XldrBuqrn1Tz4R0aWwsTj2181rHBmgIq6z43xWwVKMxraCGf"/>
-</div>
-<div>
-<p class="font-bold text-white">ETH/USDT</p>
-<p class="text-xs text-slate-500">Cross 20x</p>
-</div>
-</div>
-</td>
-<td class="px-6 py-4">
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent-red/10 text-accent-red border border-accent-red/20">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden p-1">
+                                            <img alt="Ethereum" class="w-full h-full" data-alt="Ethereum logo"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7MVJw3RdhT3ETGzXpZ1u_m3LZQBAsp0bUJYntx1Nn8zjZ_Sw69zRCDV-rpgv7pVWbY2WlrKZUvy8sq-pQGygGNETPNv6NfxhVr2p2ecCUeY6ii1ToJyS5dbCxHf9Fsh6sZlIy93tkyelHgYAFdOkzvfGmsdgTcxAN0-N4Sw-xJ2fhOVysyPJp9NDUAqhic668aRdHXZDKdEJQi_77he3F3TR_1Sd9XldrBuqrn1Tz4R0aWwsTj2181rHBmgIq6z43xWwVKMxraCGf" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-white">ETH/USDT</p>
+                                            <p class="text-xs text-slate-500">Cross 20x</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent-red/10 text-accent-red border border-accent-red/20">
                                         SHORT
                                     </span>
-</td>
-<td class="px-6 py-4 font-mono text-slate-300">$2,250.00</td>
-<td class="px-6 py-4 font-mono text-white">$2,210.40</td>
-<td class="px-6 py-4">
-<div class="flex flex-col">
-<span class="font-mono font-bold text-accent-green">+$792.00</span>
-<span class="font-mono text-xs text-accent-green/80">+1.76%</span>
-</div>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 hover:border-white/20 transition-all">
+                                </td>
+                                <td class="px-6 py-4 font-mono text-slate-300">$2,250.00</td>
+                                <td class="px-6 py-4 font-mono text-white">$2,210.40</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-mono font-bold text-accent-green">+$792.00</span>
+                                        <span class="font-mono text-xs text-accent-green/80">+1.76%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button
+                                        class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 hover:border-white/20 transition-all">
                                         Close
                                     </button>
-</td>
-</tr>
-<tr class="hover:bg-white/5 transition-colors group">
-<td class="px-6 py-4">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-black flex items-center justify-center overflow-hidden p-1">
-<img alt="Solana" class="w-full h-full" data-alt="Solana logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeIPejxgSiYS27TYlo7zQfT31XoK0s8acbeUNEr6pzJWlIgJivV-Hr6S52hKNMpAzsLc5CAL7hU4_ly9YTMwRvxtcoACc1mrqbBQ77gxfZmlEe-luS5ml_G93Vd3nWM65ZrGxIL9hUYRsvYFeEbJGdRPGWniY2FIEHyv70KUTQ3Eq-SVpLz7QFYY603hzzZ6a3PmuoJqoIT8cC8QsVgT3V4gnoqdRH0i6-foQKslKX9xpT9KmRtbYgmLf5i5z8OgMcYv9BeDIbA5sg"/>
-</div>
-<div>
-<p class="font-bold text-white">SOL/USDT</p>
-<p class="text-xs text-slate-500">Iso 5x</p>
-</div>
-</div>
-</td>
-<td class="px-6 py-4">
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent-green/10 text-accent-green border border-accent-green/20">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-black flex items-center justify-center overflow-hidden p-1">
+                                            <img alt="Solana" class="w-full h-full" data-alt="Solana logo"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeIPejxgSiYS27TYlo7zQfT31XoK0s8acbeUNEr6pzJWlIgJivV-Hr6S52hKNMpAzsLc5CAL7hU4_ly9YTMwRvxtcoACc1mrqbBQ77gxfZmlEe-luS5ml_G93Vd3nWM65ZrGxIL9hUYRsvYFeEbJGdRPGWniY2FIEHyv70KUTQ3Eq-SVpLz7QFYY603hzzZ6a3PmuoJqoIT8cC8QsVgT3V4gnoqdRH0i6-foQKslKX9xpT9KmRtbYgmLf5i5z8OgMcYv9BeDIbA5sg" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-white">SOL/USDT</p>
+                                            <p class="text-xs text-slate-500">Iso 5x</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent-green/10 text-accent-green border border-accent-green/20">
                                         LONG
                                     </span>
-</td>
-<td class="px-6 py-4 font-mono text-slate-300">$98.45</td>
-<td class="px-6 py-4 font-mono text-white">$97.20</td>
-<td class="px-6 py-4">
-<div class="flex flex-col">
-<span class="font-mono font-bold text-accent-red">-$62.50</span>
-<span class="font-mono text-xs text-accent-red/80">-1.27%</span>
-</div>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 hover:border-white/20 transition-all">
+                                </td>
+                                <td class="px-6 py-4 font-mono text-slate-300">$98.45</td>
+                                <td class="px-6 py-4 font-mono text-white">$97.20</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-mono font-bold text-accent-red">-$62.50</span>
+                                        <span class="font-mono text-xs text-accent-red/80">-1.27%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button
+                                        class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white hover:bg-white/10 hover:border-white/20 transition-all">
                                         Close
                                     </button>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<!-- Bottom Quick Stats Row -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<!-- Stat Mini Card -->
-<div class="glass-panel rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
-<div class="flex flex-col">
-<span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Win Rate</span>
-<span class="text-2xl font-bold text-white font-mono">68.4%</span>
-</div>
-<div class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined">analytics</span>
-</div>
-</div>
-<!-- Stat Mini Card -->
-<div class="glass-panel rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
-<div class="flex flex-col">
-<span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Total Trades</span>
-<span class="text-2xl font-bold text-white font-mono">1,248</span>
-</div>
-<div class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined">list_alt</span>
-</div>
-</div>
-<!-- Stat Mini Card -->
-<div class="glass-panel rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
-<div class="flex flex-col">
-<span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Avg. Hold Time</span>
-<span class="text-2xl font-bold text-white font-mono">4h 12m</span>
-</div>
-<div class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined">schedule</span>
-</div>
-</div>
-</div>
-</div>
-</main>
-</body></html>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Bottom Quick Stats Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Stat Mini Card -->
+                <div
+                    class="glass-panel rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Win Rate</span>
+                        <span id="dash-winrate" class="text-2xl font-bold text-white font-mono">--%</span>
+                    </div>
+                    <div
+                        class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">analytics</span>
+                    </div>
+                </div>
+                <!-- Stat Mini Card -->
+                <div
+                    class="glass-panel rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Total
+                            Trades</span>
+                        <span id="dash-trades" class="text-2xl font-bold text-white font-mono">--</span>
+                    </div>
+                    <div
+                        class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">list_alt</span>
+                    </div>
+                </div>
+                <!-- Stat Mini Card -->
+                <div
+                    class="glass-panel rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Total PNL
+                            ($)</span>
+                        <span id="dash-total-pnl" class="text-2xl font-bold text-white font-mono">--</span>
+                    </div>
+                    <div
+                        class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">schedule</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        const SB_URL = 'https://udqxvsgdgxgtnhxxxcgv.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcXh2c2dkZ3hndG5oeHh4Y2d2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODcwNTM0NCwiZXhwIjoyMDg0MjgxMzQ0fQ.mUKPJvTeG2MU4Fxfddcbcx2Q7H8EDuXcDtWAbHGvT48';
+        const sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+        async function fetchPortfolio() {
+            const { data } = await sb.from('ghost_portfolio').select('*').order('id', { ascending: false }).limit(1);
+            if (!data || !data[0]) return;
+            const p = data[0], bal = +p.balance, start = +p.start_balance, pnl = bal - start;
+            const tot = (+p.wins) + (+p.losses);
+            const wr = tot > 0 ? ((p.wins / tot) * 100).toFixed(1) : '0';
+
+            document.getElementById('dash-balance').innerText = '$' + bal.toFixed(2);
+
+            const pnlEl = document.getElementById('dash-pnl');
+            pnlEl.innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
+            pnlEl.style.color = pnl >= 0 ? '#10B981' : '#EF4444';
+
+            const pctEl = document.getElementById('dash-pnl-pct');
+            const pct = start > 0 ? ((pnl / start) * 100).toFixed(2) : 0;
+            pctEl.innerText = (pnl >= 0 ? '+' : '') + pct + '% (Session)';
+            pctEl.style.color = pnl >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)';
+
+            document.getElementById('dash-winrate').innerText = wr + '%';
+            document.getElementById('dash-trades').innerText = tot;
+            document.getElementById('dash-total-pnl').innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
+            document.getElementById('dash-total-pnl').style.color = pnl >= 0 ? '#10B981' : '#EF4444';
+        }
+
+        async function fetchTrades() {
+            const { data: open } = await sb.from('ghost_trades').select('*').eq('status', 'OPEN').order('opened_at', { ascending: false });
+            const posEl = document.getElementById('dash-positions');
+            if (open && open.length > 0) {
+                posEl.innerHTML = open.map(t => `
+                <tr class="hover:bg-white/5 transition-colors group">
+                    <td class="px-6 py-4"><p class="font-bold text-white">${t.asset}</p></td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${t.direction === 'LONG' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' : 'bg-accent-red/10 text-accent-red border-accent-red/20'} border">
+                            ${t.direction}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 font-mono text-slate-300">$${(+t.entry_price).toFixed(2)}</td>
+                    <td class="px-6 py-4 font-mono text-white">...</td>
+                    <td class="px-6 py-4 font-mono text-slate-500">OPEN</td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-xs text-white">Active</button>
+                    </td>
+                </tr>
+            `).join('');
+            } else {
+                posEl.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">🔭 Scanning for perfect setups...</td></tr>';
+            }
+        }
+
+        async function fetchLog() {
+            const { data } = await sb.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(6);
+            const logEl = document.getElementById('dash-log');
+            if (data && data.length > 0) {
+                logEl.innerHTML = data.map(d => {
+                    const time = new Date(d.created_at).toLocaleTimeString();
+                    return \`<div class="flex gap-2 mb-2"><span class="text-slate-600">[\${time}]</span><span class="\${d.analysis.includes('WIN') ? 'text-accent-green' : 'text-slate-400'}">\${d.analysis}</span></div>\`;
+            }).join('') + '<div class="flex gap-2"><span class="text-primary cursor-blink">_</span></div>';
+        }
+    }
+
+    async function fetchSignals() {
+        const { data } = await sb.from('ghost_signals').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if(data && data.ml_prediction) {
+            try {
+                const mlObj = typeof data.ml_prediction === 'string' ? JSON.parse(data.ml_prediction) : data.ml_prediction;
+                if(mlObj.score) document.getElementById('dash-ml-score').innerText = (mlObj.score * 100).toFixed(0) + '%';
+                if(mlObj.predict) {
+                    const textEl = document.getElementById('dash-ml-text');
+                    textEl.innerText = mlObj.predict;
+                    textEl.style.color = mlObj.predict === 'LONG' || mlObj.predict === 'BULLISH' ? '#10B981' : '#EF4444';
+                }
+            } catch(e) {}
+        }
+    }
+
+    function init() {
+        fetchPortfolio();
+        fetchTrades();
+        fetchLog();
+        fetchSignals();
+    }
+
+    init();
+    setInterval(init, 5000); // Polling every 5 sec for fluid real-time data
+    </script>
+</body>
+
+</html>
