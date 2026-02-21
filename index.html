@@ -603,7 +603,13 @@
             try {
                 const { data } = await sb.from('ghost_signals').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
                 if (data && data.ml_prediction) {
-                    const mlObj = typeof data.ml_prediction === 'string' ? JSON.parse(data.ml_prediction) : data.ml_prediction;
+                    let mlObj = {};
+                    try {
+                        mlObj = typeof data.ml_prediction === 'string' ? (data.ml_prediction.startsWith('{') ? JSON.parse(data.ml_prediction) : { predict: data.ml_prediction }) : data.ml_prediction;
+                    } catch (e) {
+                        mlObj = { predict: String(data.ml_prediction) };
+                    }
+
                     if (mlObj.score) {
                         const scorePct = (mlObj.score * 100).toFixed(0);
                         document.getElementById('dash-ml-score').innerText = scorePct + '%';
