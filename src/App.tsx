@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Rocket, LayoutDashboard, LineChart, Brain, History, Settings, Bell, Crosshair } from 'lucide-react';
+import { Rocket, LayoutDashboard, LineChart, Brain, History as HistoryIcon, Settings, Bell, Crosshair } from 'lucide-react';
 import Overview from './views/Overview';
 import Radar from './views/Radar';
 import ActiveTrades from './views/ActiveTrades';
@@ -14,7 +14,7 @@ function App() {
     { id: 'radar', label: 'HFT Radar', icon: Crosshair },
     { id: 'trades', label: 'Active Trades', icon: LineChart },
     { id: 'intel', label: 'AI Intel', icon: Brain },
-    { id: 'history', label: 'History', icon: History },
+    { id: 'history', label: 'History', icon: HistoryIcon },
   ];
 
   return (
