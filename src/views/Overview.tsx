@@ -23,32 +23,6 @@ export default function Overview() {
         const { data: pData } = await supabase.from('ghost_portfolio').select('*').limit(1);
         if (pData && pData.length > 0) {
             setPortfolio(pData[0]);
-
-            // Build equity curve using the last 20 closed trades
-            const { data: tData } = await supabase.from('ghost_trades')
-                .select('closed_at, pnl')
-                .not('closed_at', 'is', null)
-                .order('closed_at', { ascending: false })
-                .limit(20);
-
-            if (tData) {
-                let currentBal = Number(pData[0].balance);
-                const historyData = [];
-                for (let i = 0; i < tData.length; i++) {
-                    // Safe parsing for Safari/webkit (strip microsecond fractions)
-                    const cleanDateStr = tData[i].closed_at.split('.')[0] + 'Z';
-                    historyData.unshift({
-                        time: new Date(cleanDateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        balance: Number(currentBal.toFixed(4)),
-                    });
-                    currentBal -= Number(tData[i].pnl) || 0;
-                }
-                historyData.unshift({
-                    time: 'T0',
-                    balance: Number(currentBal.toFixed(4)),
-                });
-                setHistory(historyData);
-            }
         }
 
         // Fetch logs
@@ -62,7 +36,7 @@ export default function Overview() {
             const rows = data?.rows || data;
             if (rows && rows.length > 0) {
                 const chartData = rows.reverse().map((r: any) => ({
-                    time: new Date(r.recorded_at.split('.')[0] + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    time: new Date(String(r.recorded_at).replace(' ', 'T').split('.')[0] + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                     balance: Number(parseFloat(r.price).toFixed(2)) // Reuse 'balance' datakey for AreaChart to minimize edits
                 }));
                 setHistory(chartData);
@@ -162,12 +136,12 @@ export default function Overview() {
                                 </linearGradient>
                             </defs>
                             <XAxis dataKey="time" stroke="#27272a" fontSize={10} tickMargin={10} minTickGap={30} />
-                            <YAxis domain={['auto', 'auto']} stroke="#27272a" fontSize={10} tickFormatter={(val) => `$${val}`} orientation="right" width={60} />
+                            <YAxis domain={['dataMin', 'dataMax']} stroke="#27272a" fontSize={10} tickFormatter={(val) => `$${val}`} orientation="right" width={60} />
                             <Tooltip
                                 contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', border: '1px solid #27272a', borderRadius: '8px', backdropFilter: 'blur(8px)' }}
                                 itemStyle={{ color: '#257bf4', fontFamily: 'monospace' }}
                             />
-                            <Area type="monotone" dataKey="balance" stroke="#257bf4" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
+                            <Area isAnimationActive={false} type="monotone" dataKey="balance" stroke="#257bf4" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
