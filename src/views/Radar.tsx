@@ -69,7 +69,7 @@ export default function Radar() {
 
     useEffect(() => {
         fetchTelemetry();
-        const interval = setInterval(fetchTelemetry, 3000); // Polling TiDB every 3s
+        const interval = setInterval(fetchTelemetry, 1000); // Polling TiDB every 1s
         return () => clearInterval(interval);
     }, []);
 
@@ -98,7 +98,7 @@ export default function Radar() {
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-accent-red animate-ping"></div>
-                    <span className="text-[10px] text-accent-red font-mono uppercase tracking-widest">Scanning {prices.length} Assets (3s)</span>
+                    <span className="text-[10px] text-accent-red font-mono uppercase tracking-widest">Scanning {prices.length} Assets (1s)</span>
                 </div>
             </div>
 

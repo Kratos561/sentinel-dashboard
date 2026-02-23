@@ -31,7 +31,7 @@ export default function ActiveTrades() {
         let interval: any;
         if (trades.length > 0) {
             fetchLivePrices();
-            interval = setInterval(fetchLivePrices, 3000);
+            interval = setInterval(fetchLivePrices, 1000);
         }
         return () => clearInterval(interval);
     }, [trades]);
