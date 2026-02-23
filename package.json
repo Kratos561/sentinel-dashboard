@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
     "@tailwindcss/vite": "^4.2.0",
+    "@tidbcloud/serverless": "^0.2.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.575.0",

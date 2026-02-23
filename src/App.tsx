@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Rocket, LayoutDashboard, LineChart, Brain, History, Settings, Bell } from 'lucide-react';
+import { Rocket, LayoutDashboard, LineChart, Brain, History, Settings, Bell, Crosshair } from 'lucide-react';
 import Overview from './views/Overview';
+import Radar from './views/Radar';
 import ActiveTrades from './views/ActiveTrades';
 import AIIntel from './views/AIIntel';
 
@@ -9,6 +10,7 @@ function App() {
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'radar', label: 'HFT Radar', icon: Crosshair },
     { id: 'trades', label: 'Active Trades', icon: LineChart },
     { id: 'intel', label: 'AI Intel', icon: Brain },
     { id: 'history', label: 'History', icon: History },
@@ -24,8 +26,8 @@ function App() {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background-dark"></div>
           </div>
           <div className="hidden lg:flex flex-col">
-            <h1 className="text-white font-bold text-lg tracking-tight leading-none">Sentinel</h1>
-            <p className="text-primary/70 text-xs font-mono mt-1">v2.5 ONLINE</p>
+            <h1 className="text-white font-bold text-[19px] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Sentinel V10</h1>
+            <p className="text-primary/80 text-[10px] uppercase font-mono mt-1 tracking-widest">Quantum Engine</p>
           </div>
         </div>
 
@@ -79,17 +81,22 @@ function App() {
               <p className="text-slate-400 text-sm mt-1">Real-time AI analysis and portfolio tracking</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-green/10 border border-accent-green/20">
-                <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse"></div>
-                <span className="text-xs font-medium text-accent-green font-mono">SYSTEM ONLINE</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-green/10 border border-accent-green/20 glass-panel">
+                <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse shadow-glow-green"></div>
+                <span className="text-[10px] font-bold text-accent-green font-mono uppercase tracking-wider">TiDB L2: ONLINE (12ms)</span>
               </div>
-              <button className="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-colors">
-                <Bell size={18} />
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 glass-panel hidden sm:flex">
+                <div className="w-2 h-2 rounded-full bg-primary shadow-glow"></div>
+                <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-wider">Supabase Vault: SECURE</span>
+              </div>
+              <button className="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors glass-panel border border-white/5">
+                <Bell size={16} />
               </button>
             </div>
           </header>
 
           {activeTab === 'overview' && <Overview />}
+          {activeTab === 'radar' && <Radar />}
           {activeTab === 'trades' && <ActiveTrades />}
           {activeTab === 'intel' && <AIIntel />}
           {activeTab === 'history' && <div className="glass-panel p-10 text-center text-slate-400 rounded-2xl">History Module - In Development</div>}
@@ -98,7 +105,7 @@ function App() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-[#05080a] border-t border-white/5 z-50 flex items-center justify-around px-2">
+        <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-background-dark border-t border-white/5 z-50 flex items-center justify-around px-2 backdrop-blur-xl">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;

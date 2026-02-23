@@ -1,45 +1,64 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Inter", "Roboto Mono", sans-serif;
-  --font-mono: "Roboto Mono", monospace;
-  --color-primary: #13c8ec;
+  --font-display: "Inter", "Roboto", sans-serif;
+  --font-mono: "Fira Code", "Roboto Mono", monospace;
+
+  --color-primary: #257bf4;
+  /* Electric Blue */
   --color-secondary: #0A0A0A;
-  --color-accent-green: #10B981;
-  --color-accent-red: #EF4444;
-  --color-surface-dark: #0f141a;
-  --color-background-dark: #05080a;
+  --color-accent-green: #00ff66;
+  /* Neon Green */
+  --color-accent-red: #ff3366;
+  /* Cherry Red */
+  --color-accent-amber: #ffb800;
+  /* Amber for neutral alerts */
+
+  --color-surface-dark: #121214;
+  --color-background-dark: #09090b;
+  /* Deep Dark Mode */
   --color-background-light: #f8fafc;
 }
 
 @layer base {
   body {
     background-color: var(--color-background-dark);
-    color: #f8fafc;
+    color: #e4e4e7;
     font-family: var(--font-display);
     margin: 0;
     min-height: 100vh;
-    background-image: 
-      radial-gradient(circle at 50% 0%, rgba(19, 200, 236, 0.05) 0%, transparent 50%),
-      linear-gradient(180deg, #05080a 0%, #030507 100%);
+    background-image:
+      radial-gradient(circle at 50% -10%, rgba(37, 123, 244, 0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #09090b 0%, #050505 100%);
   }
 }
 
 .glass-panel {
-  background-color: rgba(15, 20, 26, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  background-color: rgba(18, 18, 20, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 .shadow-glow {
-  box-shadow: 0 0 20px rgba(19, 200, 236, 0.3);
+  box-shadow: 0 0 20px rgba(37, 123, 244, 0.3);
+}
+
+.shadow-glow-red {
+  box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+}
+
+.shadow-glow-green {
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
 }
 
 .cursor-blink {
   animation: blink 1s step-end infinite;
 }
 
-@keyframes blink { 
-  50% { opacity: 0; } 
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }

@@ -95,40 +95,40 @@ export default function Overview() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
             {/* Top Stat row */}
             <div className="col-span-12 grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-primary/30">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                         <Wallet size={14} className="text-primary" /> Total Equity
                     </span>
                     <h3 className="text-3xl font-mono text-white tracking-tight">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden border-b border-accent-green/30">
                     <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl ${isProfit ? 'bg-accent-green/20' : 'bg-accent-red/20'}`}></div>
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                         <Activity size={14} className={pnlColor} /> Session PNL
                     </span>
                     <div className="flex items-baseline gap-2">
-                        <h3 className={`text-3xl font-mono tracking-tight ${pnlColor}`}>
+                        <h3 className={`text-3xl font-mono tracking-tight ${pnlColor} drop-shadow-[0_0_8px_rgba(0,255,102,0.4)]`}>
                             {isProfit ? '+' : '-'}${Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </h3>
-                        <span className={`text-sm font-mono ${pnlColor} opacity-80`}>
+                        <span className={`text-[10px] font-mono ${pnlColor} opacity-80`}>
                             {startBalance > 0 ? ((pnl / startBalance) * 100).toFixed(2) : '0'}%
                         </span>
                     </div>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-                        <Target size={14} className="text-primary" /> Win Rate
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-accent-amber/30">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <Target size={14} className="text-accent-amber" /> Global Win Rate
                     </span>
-                    <h3 className="text-3xl font-mono text-white tracking-tight">{wr}%</h3>
+                    <h3 className="text-3xl font-mono text-accent-amber drop-shadow-[0_0_8px_rgba(255,184,0,0.4)] tracking-tight">{wr}%</h3>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-                        <ArrowUpRight size={14} className="text-primary" /> Profit Factor
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-accent-green/30">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <ArrowUpRight size={14} className="text-accent-green" /> Profit Factor
                     </span>
-                    <h3 className="text-3xl font-mono text-white tracking-tight">{profitFactor}</h3>
+                    <h3 className="text-3xl font-mono text-accent-green drop-shadow-[0_0_8px_rgba(0,255,102,0.4)] tracking-tight">{profitFactor}</h3>
                 </div>
             </div>
 
@@ -145,17 +145,17 @@ export default function Overview() {
                         <AreaChart data={history} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#13c8ec" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#13c8ec" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#257bf4" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#257bf4" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <XAxis dataKey="time" stroke="#334155" fontSize={10} tickMargin={10} minTickGap={30} />
-                            <YAxis domain={['auto', 'auto']} stroke="#334155" fontSize={10} tickFormatter={(val) => `$${val}`} orientation="right" width={60} />
+                            <XAxis dataKey="time" stroke="#27272a" fontSize={10} tickMargin={10} minTickGap={30} />
+                            <YAxis domain={['auto', 'auto']} stroke="#27272a" fontSize={10} tickFormatter={(val) => `$${val}`} orientation="right" width={60} />
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#0f141a', border: '1px solid #1e293b', borderRadius: '8px' }}
-                                itemStyle={{ color: '#13c8ec', fontFamily: 'monospace' }}
+                                contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', border: '1px solid #27272a', borderRadius: '8px', backdropFilter: 'blur(8px)' }}
+                                itemStyle={{ color: '#257bf4', fontFamily: 'monospace' }}
                             />
-                            <Area type="monotone" dataKey="balance" stroke="#13c8ec" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
+                            <Area type="monotone" dataKey="balance" stroke="#257bf4" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -170,16 +170,16 @@ export default function Overview() {
 
                     <div className="relative w-40 h-40 mb-4">
                         <svg className="w-full h-full transform -rotate-90">
-                            <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
+                            <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="10" />
                             <circle
-                                cx="80" cy="80" r="70" fill="none" stroke="#13c8ec" strokeWidth="10" strokeLinecap="round"
+                                cx="80" cy="80" r="70" fill="none" stroke="#257bf4" strokeWidth="10" strokeLinecap="round"
                                 strokeDasharray={439.8} strokeDashoffset={439.8 - (439.8 * signalScore)}
-                                className="drop-shadow-[0_0_8px_rgba(19,200,236,0.6)] transition-all duration-1000 ease-out"
+                                className="drop-shadow-[0_0_12px_rgba(37,123,244,0.6)] transition-all duration-1000 ease-out"
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <span className="text-3xl font-bold text-white font-mono">{(signalScore * 100).toFixed(0)}%</span>
-                            <span className="text-[10px] text-primary mt-1">CONFIDENCE</span>
+                            <span className="text-[10px] text-primary mt-1 tracking-widest uppercase">Confidence</span>
                         </div>
                     </div>
 

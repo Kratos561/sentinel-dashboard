@@ -84,20 +84,21 @@ export default function ActiveTrades() {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="glass-panel overflow-hidden border border-white/5 rounded-2xl">
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-surface-dark">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Target className="text-primary" /> Ongoing Sentinel Operations
+            <div className="glass-panel overflow-hidden border border-white/5 rounded-2xl shadow-glow/5">
+                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-surface-dark relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50"></div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2 uppercase tracking-widest font-mono text-[14px]">
+                        <Target className="text-primary drop-shadow-[0_0_8px_rgba(37,123,244,0.6)]" size={18} /> Ongoing Operations
                     </h3>
                 </div>
 
                 {trades.length === 0 ? (
                     <div className="p-20 text-center flex flex-col items-center justify-center border-t border-white/5 bg-[#05080a]">
-                        <div className="h-16 w-16 rounded-full border border-dashed border-white/10 flex items-center justify-center animate-spin-slow mb-4 text-slate-500">
+                        <div className="h-16 w-16 rounded-full border border-dashed border-primary/30 flex items-center justify-center animate-spin-slow mb-4 text-primary shadow-glow">
                             <AlertCircle size={24} />
                         </div>
-                        <p className="text-slate-400 font-mono text-sm uppercase tracking-widest">🔭 Scanning for perfect setups</p>
-                        <p className="text-slate-600 text-xs mt-2">Awaiting Alpha Signal Confirmation</p>
+                        <p className="text-primary font-mono text-sm uppercase tracking-widest drop-shadow-[0_0_8px_rgba(37,123,244,0.4)]">🔭 SCANNING SATELLITE LINKS...</p>
+                        <p className="text-slate-500 text-xs mt-2 uppercase tracking-widest font-mono">Awaiting Alpha Signal Confirmation</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -122,7 +123,7 @@ export default function ActiveTrades() {
                                         <tr key={t.id} className="hover:bg-white/5 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-surface-dark flex items-center justify-center border border-white/5 shadow-glow-sm">
+                                                    <div className="w-8 h-8 rounded-full bg-surface-dark flex items-center justify-center border border-white/5 drop-shadow-[0_0_4px_rgba(255,255,255,0.1)]">
                                                         <span className="text-[10px] font-bold text-white">{t.asset.substring(0, 3)}</span>
                                                     </div>
                                                     <div>
