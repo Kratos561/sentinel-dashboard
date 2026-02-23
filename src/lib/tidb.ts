@@ -10,6 +10,6 @@ export const tidb = connect({
         if (url.includes('https://http-gateway01.us-east-1.prod.aws.tidbcloud.com')) {
             url = url.replace('https://http-gateway01.us-east-1.prod.aws.tidbcloud.com', '/api/tidb');
         }
-        return fetch(url, init);
+        return fetch(url, { ...init, cache: 'no-store' });
     }
 });
