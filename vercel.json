@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/tidb/:path*",
+            "destination": "https://http-gateway01.us-east-1.prod.aws.tidbcloud.com/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
