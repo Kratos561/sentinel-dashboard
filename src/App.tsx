@@ -4,6 +4,7 @@ import Overview from './views/Overview';
 import Radar from './views/Radar';
 import ActiveTrades from './views/ActiveTrades';
 import AIIntel from './views/AIIntel';
+import History from './views/History';
 
 function App() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -99,7 +100,7 @@ function App() {
           {activeTab === 'radar' && <Radar />}
           {activeTab === 'trades' && <ActiveTrades />}
           {activeTab === 'intel' && <AIIntel />}
-          {activeTab === 'history' && <div className="glass-panel p-10 text-center text-slate-400 rounded-2xl">History Module - In Development</div>}
+          {activeTab === 'history' && <History />}
           {activeTab === 'settings' && <div className="glass-panel p-10 text-center text-slate-400 rounded-2xl">Settings Panel - In Development</div>}
 
         </div>
