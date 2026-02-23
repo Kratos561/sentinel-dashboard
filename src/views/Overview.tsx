@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { tidb } from '../lib/tidb';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Activity, Terminal, BrainCircuit, Target, Wallet, ArrowUpRight } from 'lucide-react';
 
@@ -8,10 +9,13 @@ export default function Overview() {
     const [history, setHistory] = useState<any[]>([]);
     const [logs, setLogs] = useState<any[]>([]);
     const [signal, setSignal] = useState<any>(null);
+    const [chartAsset] = useState<string>('NASDAQ100');
 
     useEffect(() => {
         fetchData();
         setupRealtime();
+        const liveHFT = setInterval(fetchLiveChart, 1000);
+        return () => clearInterval(liveHFT);
     }, []);
 
     const fetchData = async () => {
@@ -50,19 +54,27 @@ export default function Overview() {
         // Fetch logs
         const { data: lData } = await supabase.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(6);
         if (lData) setLogs(lData);
+    };
 
-        // Fetch signals
-        const { data: sData } = await supabase.from('ghost_signals').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
-        if (sData && sData.ml_prediction) {
-            try {
-                const mlObj = typeof sData.ml_prediction === 'string'
-                    ? (sData.ml_prediction.startsWith('{') ? JSON.parse(sData.ml_prediction) : { predict: sData.ml_prediction })
-                    : sData.ml_prediction;
-                setSignal(mlObj);
-            } catch (e) {
-                setSignal({ predict: String(sData.ml_prediction) });
+    const fetchLiveChart = async () => {
+        try {
+            const data: any = await tidb.execute(`SELECT price, recorded_at FROM ghost_prices WHERE symbol = ? ORDER BY recorded_at DESC LIMIT 30`, [chartAsset]);
+            const rows = data?.rows || data;
+            if (rows && rows.length > 0) {
+                const chartData = rows.reverse().map((r: any) => ({
+                    time: new Date(r.recorded_at.split('.')[0] + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    balance: Number(parseFloat(r.price).toFixed(2)) // Reuse 'balance' datakey for AreaChart to minimize edits
+                }));
+                setHistory(chartData);
             }
-        }
+
+            // Sync ML Signal as well
+            const sig: any = await tidb.execute(`SELECT * FROM ghost_signals ORDER BY created_at DESC LIMIT 1`);
+            const sData = (sig?.rows || sig)?.[0];
+            if (sData) {
+                setSignal({ predict: sData.ml_prediction, target: sData.symbol, conf: sData.hybrid_confidence });
+            }
+        } catch (e) { console.error(e); }
     };
 
     const setupRealtime = () => {
@@ -70,7 +82,6 @@ export default function Overview() {
         ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, fetchData);
         ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchData);
         ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, fetchData);
-        ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_signals' }, fetchData);
         ch.subscribe();
         return () => { supabase.removeChannel(ch); };
     };
@@ -88,8 +99,9 @@ export default function Overview() {
     const profitFactor = losses > 0 ? (wins / losses).toFixed(2) : (wins > 0 ? '∞' : '0.00');
 
     // Circular Progress Math
-    const signalScore = signal?.score ? Number(signal.score) : 0;
+    const signalScore = signal?.conf ? Number(signal.conf) / 100 : 0;
     const signalPredict = signal?.predict || 'WAITING';
+    const signalTarget = signal?.target || '---';
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
@@ -136,8 +148,8 @@ export default function Overview() {
             <div className="md:col-span-8 glass-panel rounded-2xl p-6 flex flex-col min-h-[350px]">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><TrendingUp className="text-primary" /> Live Equity Curve</h3>
-                        <p className="text-xs text-slate-500 mt-1">Real-time portfolio growth tracking</p>
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><TrendingUp className="text-primary" /> L2 Live Market Stream</h3>
+                        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Real-time TiDB Serverless HFT Telemetry ({chartAsset})</p>
                     </div>
                 </div>
                 <div className="flex-1 w-full h-[300px] min-h-[250px] relative">
@@ -165,7 +177,7 @@ export default function Overview() {
                 {/* AI Sentiment Radial */}
                 <div className="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center relative flex-1">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2 w-full">
-                        <BrainCircuit size={16} /> Protocol Sentiment
+                        <BrainCircuit size={16} /> Protocol Sentiment ({signalTarget})
                     </h3>
 
                     <div className="relative w-40 h-40 mb-4">
