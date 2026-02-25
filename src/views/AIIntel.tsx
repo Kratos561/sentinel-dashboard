@@ -35,7 +35,7 @@ export default function AIIntel() {
                 <div className="flex-1 p-6 font-mono text-xs overflow-y-auto space-y-3">
                     <div className="text-primary mb-6 animate-pulse drop-shadow-[0_0_8px_rgba(37,123,244,0.6)]">
                         ======================================<br />
-                        SENTINEL QUANTUM ENGINE V10 INIT<br />
+                        SENTINEL ÁGUILA IMPERIAL V11 INIT<br />
                         CONNECTION SECURED OVER ENCRYPTED LINK<br />
                         ======================================
                     </div>
@@ -68,33 +68,41 @@ export default function AIIntel() {
                     <div className="absolute top-0 left-0 w-1 bg-accent-green h-full shadow-glow-green"></div>
                     <div className="flex items-center gap-3 mb-2">
                         <ShieldCheck size={20} className="text-accent-green drop-shadow-[0_0_8px_rgba(0,255,102,0.4)]" />
-                        <h4 className="font-bold text-white tracking-widest font-mono text-xs uppercase">Defense Matrix</h4>
+                        <h4 className="font-bold text-white tracking-widest font-mono text-xs uppercase">Defense Matrix V11</h4>
                     </div>
-                    <p className="text-sm text-slate-400">Risk protocol active. Max DD locked at 5% per session. Order Block validation enabled.</p>
+                    <p className="text-sm text-slate-400">Kill Switch: 4 max losses/day. Breakeven Auto @ 30% TP. DCA Safety Orders active. Blacklist: SUI, SP500, BNB.</p>
                 </div>
 
                 <div className="glass-panel p-6 rounded-2xl border flex flex-col border-primary/20 relative overflow-hidden transition-all hover:bg-white/5 shadow-glow/10">
                     <div className="absolute top-0 left-0 w-1 bg-primary h-full shadow-glow"></div>
                     <div className="flex items-center gap-3 mb-2">
                         <Cpu size={20} className="text-primary drop-shadow-[0_0_8px_rgba(37,123,244,0.4)]" />
-                        <h4 className="font-bold text-white tracking-widest font-mono text-xs uppercase">Model Parameters</h4>
+                        <h4 className="font-bold text-white tracking-widest font-mono text-xs uppercase">V11 Modules</h4>
                     </div>
                     <div className="flex flex-col gap-2 mt-2">
                         <div className="flex justify-between items-center bg-surface-dark px-3 py-2 rounded-lg border border-white/5">
-                            <span className="text-xs text-slate-500 font-mono">Divergence Check</span>
-                            <span className="text-xs text-accent-green font-bold font-mono">TRUE</span>
+                            <span className="text-xs text-slate-500 font-mono">Regime Filter (ADX+CI)</span>
+                            <span className="text-xs text-accent-green font-bold font-mono">ACTIVE</span>
                         </div>
                         <div className="flex justify-between items-center bg-surface-dark px-3 py-2 rounded-lg border border-white/5">
-                            <span className="text-xs text-slate-500 font-mono">L2 Imbalance Filter</span>
-                            <span className="text-xs text-accent-green font-bold font-mono">TRUE</span>
+                            <span className="text-xs text-slate-500 font-mono">DCA Safety Orders</span>
+                            <span className="text-xs text-accent-green font-bold font-mono">2 MAX</span>
                         </div>
                         <div className="flex justify-between items-center bg-surface-dark px-3 py-2 rounded-lg border border-white/5">
-                            <span className="text-xs text-slate-500 font-mono">Min ML Score</span>
-                            <span className="text-xs text-primary font-bold font-mono">75.0%</span>
+                            <span className="text-xs text-slate-500 font-mono">Bollinger + Mean Rev</span>
+                            <span className="text-xs text-accent-green font-bold font-mono">10% WT</span>
                         </div>
                         <div className="flex justify-between items-center bg-surface-dark px-3 py-2 rounded-lg border border-white/5">
-                            <span className="text-xs text-slate-500 font-mono">Hybrid Core</span>
-                            <span className="text-xs text-primary font-bold font-mono">ENGAGED</span>
+                            <span className="text-xs text-slate-500 font-mono">Breakeven Auto</span>
+                            <span className="text-xs text-accent-green font-bold font-mono">@ 30%</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-surface-dark px-3 py-2 rounded-lg border border-white/5">
+                            <span className="text-xs text-slate-500 font-mono">Hybrid Min Score</span>
+                            <span className="text-xs text-primary font-bold font-mono">78.0%</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-surface-dark px-3 py-2 rounded-lg border border-white/5">
+                            <span className="text-xs text-slate-500 font-mono">Asset Blacklist</span>
+                            <span className="text-xs text-accent-red font-bold font-mono">SUI, SP500, BNB</span>
                         </div>
                     </div>
                 </div>

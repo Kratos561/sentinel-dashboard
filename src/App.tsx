@@ -27,8 +27,8 @@ function App() {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background-dark"></div>
           </div>
           <div className="hidden lg:flex flex-col">
-            <h1 className="text-white font-bold text-[19px] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Sentinel V10</h1>
-            <p className="text-primary/80 text-[10px] uppercase font-mono mt-1 tracking-widest">Quantum Engine</p>
+            <h1 className="text-white font-bold text-[19px] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Sentinel V11</h1>
+            <p className="text-primary/80 text-[10px] uppercase font-mono mt-1 tracking-widest">Águila Imperial</p>
           </div>
         </div>
 
