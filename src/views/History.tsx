@@ -38,8 +38,15 @@ export default function History() {
 
     useEffect(() => {
         fetchHistory();
-        const interval = setInterval(fetchHistory, 10000); // Poll every 10s for new historical entries
-        return () => clearInterval(interval);
+        // FIX #6: Added Realtime subscription so closed trades appear instantly
+        const ch = supabase.channel('react-history-tab');
+        ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchHistory);
+        ch.subscribe();
+        const interval = setInterval(fetchHistory, 10000);
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(ch);
+        };
     }, []);
 
     if (loading) return <div className="text-slate-500 animate-pulse">Scanning Historical Records...</div>;
@@ -125,9 +132,10 @@ export default function History() {
                                                 {isWin ? '+' : ''}${parseFloat(t.pnl as any) < 10 ? parseFloat(t.pnl as any).toFixed(4) : parseFloat(t.pnl as any).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-6 py-4 text-right">
+                                                {/* FIX #11: Show full date + time, not just the hour */}
                                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-dark rounded border border-white/5 font-mono text-xs text-slate-400">
                                                     <Clock size={12} className="text-primary/70" />
-                                                    {closedDate.toLocaleTimeString('en-US', { hour12: false })}
+                                                    {closedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {closedDate.toLocaleTimeString('en-US', { hour12: false })}
                                                 </div>
                                             </td>
                                         </tr>

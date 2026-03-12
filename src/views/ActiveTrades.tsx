@@ -3,14 +3,27 @@ import { supabase } from '../lib/supabase';
 import { Target, TrendingDown, TrendingUp, AlertCircle } from 'lucide-react';
 
 const PYTH_FEEDS: Record<string, string> = {
+    // Commodities
     'XAU': '765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2',
+    'ORO': '765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2',  // FIX #16: Alias for Gold
+    // Forex
     'EUR': 'a995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b',
+    'EURO': 'a995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b', // FIX #16: Alias
     'JPY': 'ef2c98c804ba503c6a707e38be4dfbb16683775f195b091252bf24693042fd52',
+    'YEN': 'ef2c98c804ba503c6a707e38be4dfbb16683775f195b091252bf24693042fd52',  // FIX #16: Alias
+    // Crypto
     'BTC': 'e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
+    'BITCOIN': 'e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // FIX #16: Alias
+    'ETH': 'ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // FIX #16: Added ETH
+    'ETHEREUM': 'ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // FIX #16: Alias
     'SOL': 'ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d',
+    'SOLANA': 'ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d', // FIX #16: Alias
+    'BNB': '2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f', // FIX #16: Added BNB
     'SUI': '23d7315113f5b1d3ba7a83604c44b94d79f4fd69af77f804fc7f920a6dc65744',
+    // Indices
     'SP500': '19e09bb805456ada3979a7d1cbb4b6d63babc3a0f8e8a9509f68afa5c4c11cd5',
     'SPY': '19e09bb805456ada3979a7d1cbb4b6d63babc3a0f8e8a9509f68afa5c4c11cd5',
+    'NASDAQ100': '9695e2b96ea7b3859da9ed25b7a46a920a776e2fdae19a7bcfdf2b219230452d', // FIX #16: Added NASDAQ100
     'QQQ': '9695e2b96ea7b3859da9ed25b7a46a920a776e2fdae19a7bcfdf2b219230452d'
 };
 
@@ -152,11 +165,11 @@ export default function ActiveTrades() {
 
                                                 if (currentPrice && entryPrice) {
                                                     const diff = currentPrice - entryPrice;
-                                                    // Standardizing visualization to 50x cross margin to show aggressive movement in active trades. 
-                                                    pnlPercent = (diff / entryPrice) * 100 * (isLong ? 1 : -1) * 50;
+                                                    // FIX #5: Removed artificial 50x multiplier — now shows REAL move %
+                                                    pnlPercent = (diff / entryPrice) * 100 * (isLong ? 1 : -1);
                                                     isProfit = pnlPercent >= 0;
                                                     pnlColor = isProfit ? 'text-accent-green bg-accent-green/10 border-accent-green/20' : 'text-accent-red bg-accent-red/10 border-accent-red/20';
-                                                    unrealizedStr = `${isProfit ? '+' : ''}${pnlPercent.toFixed(2)}% ROE`;
+                                                    unrealizedStr = `${isProfit ? '+' : ''}${pnlPercent.toFixed(3)}% Move`;
                                                 }
 
                                                 return (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { tidb } from '../lib/tidb';
+import { getRadarTelemetry, getSignalHistory } from '../lib/influxdb';
 import { Crosshair, Search } from 'lucide-react';
 
 interface AssetData {
@@ -27,41 +27,33 @@ export default function Radar() {
 
     const fetchTelemetry = async () => {
         try {
-            // Get latest prices for top 8 assets
-            // Using a subquery trick to get the most recent row per symbol
-            const priceQuery = `
-                SELECT t1.* FROM ghost_prices t1
-                INNER JOIN (
-                    SELECT symbol, MAX(recorded_at) as max_time
-                    FROM ghost_prices
-                    GROUP BY symbol
-                ) t2 ON t1.symbol = t2.symbol AND t1.recorded_at = t2.max_time
-                ORDER BY t1.symbol
-            `;
-            const pData: any = await tidb.execute(priceQuery);
-            if (pData && pData.rows) {
-                setPrices(pData.rows);
-            } else if (Array.isArray(pData)) {
-                setPrices(pData);
+            // Get latest telemetry for all assets from InfluxDB
+            const telemetry = await getRadarTelemetry();
+            if (telemetry && telemetry.length > 0) {
+                setPrices(telemetry.map((r: any) => ({
+                    symbol: r.symbol || '',
+                    price: String(r.price || 0),
+                    trend: String(r.trend || 0),
+                    momentum: String(r.momentum || 0),
+                    volatility: String(r.volatility || 0),
+                    recorded_at: r.time || new Date().toISOString(),
+                })));
             }
 
             // Get latest signals
-            const sigQuery = `
-                SELECT t1.* FROM ghost_signals t1
-                INNER JOIN (
-                    SELECT symbol, MAX(created_at) as max_time
-                    FROM ghost_signals
-                    GROUP BY symbol
-                ) t2 ON t1.symbol = t2.symbol AND t1.created_at = t2.max_time
-            `;
-            const sData: any = await tidb.execute(sigQuery);
-            if (sData && sData.rows) {
-                setSignals(sData.rows);
-            } else if (Array.isArray(sData)) {
-                setSignals(sData);
+            const sigRows = await getSignalHistory(10);
+            if (sigRows && sigRows.length > 0) {
+                setSignals(sigRows.map((r: any) => ({
+                    symbol: r.symbol || '',
+                    hybrid_confidence: parseFloat(r.hybrid_confidence) || 0,
+                    ml_prediction: r.ml_prediction || '0',
+                    divergence: r.divergence || 'none',
+                    liquidity_pool: r.liquidity_pool || 'none',
+                    created_at: r._time || new Date().toISOString(),
+                })));
             }
         } catch (e) {
-            console.error("TiDB fetch error:", e);
+            console.error("InfluxDB fetch error:", e);
         } finally {
             setLoading(false);
         }
@@ -69,7 +61,8 @@ export default function Radar() {
 
     useEffect(() => {
         fetchTelemetry();
-        const interval = setInterval(fetchTelemetry, 1000); // Polling TiDB every 1s
+        // FIX #2: Reduced from 1s to 10s — was generating 86,400 JOIN queries/day on 1.6M row table
+        const interval = setInterval(fetchTelemetry, 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -98,7 +91,7 @@ export default function Radar() {
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-accent-red animate-ping"></div>
-                    <span className="text-[10px] text-accent-red font-mono uppercase tracking-widest">Scanning {prices.length} Assets (1s)</span>
+                    <span className="text-[10px] text-accent-red font-mono uppercase tracking-widest">Scanning {prices.length} Assets (10s)</span>
                 </div>
             </div>
 
@@ -134,10 +127,10 @@ export default function Radar() {
                             </div>
 
                             <div className="space-y-3 mt-2">
-                                {/* RSI Gauge */}
+                                {/* Momentum Gauge (FIX #4: Renamed from fake RSI to accurate MOMENTUM label) */}
                                 <div>
                                     <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-                                        <span>RSI</span>
+                                        <span>MOMENTUM</span>
                                         <span className={rsiColor}>{rsi.toFixed(1)}</span>
                                     </div>
                                     <div className="w-full h-1 bg-surface-dark rounded-full overflow-hidden">

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Rocket, LayoutDashboard, LineChart, Brain, History as HistoryIcon, Settings, Bell, Crosshair } from 'lucide-react';
+import { influxPing } from './lib/influxdb';
 import Overview from './views/Overview';
 import Radar from './views/Radar';
 import ActiveTrades from './views/ActiveTrades';
@@ -8,6 +9,25 @@ import History from './views/History';
 
 function App() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [tidbLatency, setTidbLatency] = useState<number | null>(null);
+  const [tidbOnline, setTidbOnline] = useState(true);
+
+  // InfluxDB dynamic latency health check
+  useEffect(() => {
+    const checkInflux = async () => {
+      const latency = await influxPing();
+      if (latency !== null) {
+        setTidbLatency(latency);
+        setTidbOnline(true);
+      } else {
+        setTidbOnline(false);
+        setTidbLatency(null);
+      }
+    };
+    checkInflux();
+    const interval = setInterval(checkInflux, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -82,9 +102,18 @@ function App() {
               <p className="text-slate-400 text-sm mt-1">Real-time AI analysis and portfolio tracking</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-green/10 border border-accent-green/20 glass-panel">
-                <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse shadow-glow-green"></div>
-                <span className="text-[10px] font-bold text-accent-green font-mono uppercase tracking-wider">TiDB L2: ONLINE (12ms)</span>
+              {/* FIX #9: Dynamic real latency badge instead of hardcoded "ONLINE (12ms)" */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border glass-panel ${
+                tidbOnline ? 'bg-accent-green/10 border-accent-green/20' : 'bg-accent-red/10 border-accent-red/20'
+              }`}>
+                <div className={`w-2 h-2 rounded-full animate-pulse ${
+                  tidbOnline ? 'bg-accent-green shadow-glow-green' : 'bg-accent-red'
+                }`}></div>
+                <span className={`text-[10px] font-bold font-mono uppercase tracking-wider ${
+                  tidbOnline ? 'text-accent-green' : 'text-accent-red'
+                }`}>
+                  InfluxDB: {tidbOnline ? `ONLINE (${tidbLatency ?? '...'}ms)` : 'OFFLINE'}
+                </span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 glass-panel hidden sm:flex">
                 <div className="w-2 h-2 rounded-full bg-primary shadow-glow"></div>

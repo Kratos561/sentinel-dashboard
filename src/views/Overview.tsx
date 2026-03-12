@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { tidb } from '../lib/tidb';
+import { getChartPrices, getLatestSignal } from '../lib/influxdb';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Activity, Terminal, BrainCircuit, Target, Wallet, ArrowUpRight } from 'lucide-react';
 
@@ -10,19 +10,39 @@ export default function Overview() {
     const [logs, setLogs] = useState<any[]>([]);
     const [signal, setSignal] = useState<any>(null);
     const [chartAsset] = useState<string>('NASDAQ100');
+    const [realPF, setRealPF] = useState<string>('0.00');
 
     useEffect(() => {
         fetchData();
-        setupRealtime();
-        const liveHFT = setInterval(fetchLiveChart, 1000);
-        return () => clearInterval(liveHFT);
+        const cleanupRealtime = setupRealtime();
+        // FIX #2: Reduced from 1s to 8s to avoid TiDB query storm (86k req/day → 10k req/day)
+        const liveHFT = setInterval(fetchLiveChart, 8000);
+        return () => {
+            clearInterval(liveHFT);
+            cleanupRealtime(); // FIX #3: Now properly cleans up Supabase WebSocket channel
+        };
     }, []);
 
     const fetchData = async () => {
         // Fetch current portfolio
         const { data: pData } = await supabase.from('ghost_portfolio').select('*').limit(1);
-        if (pData && pData.length > 0) {
-            setPortfolio(pData[0]);
+        if (pData && pData.length > 0) setPortfolio(pData[0]);
+
+        // FIX #1: Calculate REAL Profit Factor from actual trade PnL sums, not win/loss count ratio
+        const { data: tradeData } = await supabase
+            .from('ghost_trades')
+            .select('pnl')
+            .eq('status', 'CLOSED');
+        if (tradeData && tradeData.length > 0) {
+            let grossProfit = 0;
+            let grossLoss = 0;
+            tradeData.forEach((t: any) => {
+                const pnl = parseFloat(t.pnl) || 0;
+                if (pnl >= 0) grossProfit += pnl;
+                else grossLoss += Math.abs(pnl);
+            });
+            const pf = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00');
+            setRealPF(pf);
         }
 
         // Fetch logs
@@ -32,31 +52,30 @@ export default function Overview() {
 
     const fetchLiveChart = async () => {
         try {
-            const data: any = await tidb.execute(`SELECT price, recorded_at FROM ghost_prices WHERE symbol = ? ORDER BY recorded_at DESC LIMIT 30`, [chartAsset]);
-            const rows = data?.rows || data;
+            const rows = await getChartPrices(chartAsset, 30);
             if (rows && rows.length > 0) {
                 const chartData = rows.reverse().map((r: any) => ({
-                    time: new Date(String(r.recorded_at).replace(' ', 'T').split('.')[0] + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                    balance: Number(parseFloat(r.price).toFixed(2)) // Reuse 'balance' datakey for AreaChart to minimize edits
+                    time: new Date(r.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    balance: Number(parseFloat(r.price).toFixed(2))
                 }));
                 setHistory(chartData);
             }
 
-            // Sync ML Signal as well
-            const sig: any = await tidb.execute(`SELECT * FROM ghost_signals ORDER BY created_at DESC LIMIT 1`);
-            const sData = (sig?.rows || sig)?.[0];
+            // Sync ML Signal
+            const sData = await getLatestSignal();
             if (sData) {
                 setSignal({ predict: sData.ml_prediction, target: sData.symbol, conf: sData.hybrid_confidence });
             }
         } catch (e) { console.error(e); }
     };
 
-    const setupRealtime = () => {
+    const setupRealtime = (): (() => void) => {
         const ch = supabase.channel('react-overview-dashboard');
         ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, fetchData);
         ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchData);
         ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, fetchData);
         ch.subscribe();
+        // FIX #3: Return cleanup function so useEffect can actually call it
         return () => { supabase.removeChannel(ch); };
     };
 
@@ -70,7 +89,8 @@ export default function Overview() {
     const wins = Number(portfolio.wins);
     const losses = Number(portfolio.losses);
     const wr = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
-    const profitFactor = losses > 0 ? (wins / losses).toFixed(2) : (wins > 0 ? '∞' : '0.00');
+    // FIX #1: Use realPF (calculated from actual gross profit / gross loss) instead of win count ratio
+    const profitFactor = realPF;
 
     // Circular Progress Math
     const signalScore = signal?.conf ? Number(signal.conf) / 100 : 0;
@@ -114,7 +134,7 @@ export default function Overview() {
                     <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                         <ArrowUpRight size={14} className="text-accent-green" /> Profit Factor
                     </span>
-                    <h3 className="text-3xl font-mono text-accent-green drop-shadow-[0_0_8px_rgba(0,255,102,0.4)] tracking-tight">{profitFactor}</h3>
+                    <h3 className="text-3xl font-mono text-accent-green drop-shadow-[0_0_8px_rgba(0,255,102,0.4)] tracking-tight">{realPF}</h3>
                 </div>
             </div>
 
@@ -123,7 +143,7 @@ export default function Overview() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h3 className="text-lg font-bold text-white flex items-center gap-2"><TrendingUp className="text-primary" /> L2 Live Market Stream</h3>
-                        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Real-time TiDB Serverless HFT Telemetry ({chartAsset})</p>
+                        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Real-time InfluxDB HFT Telemetry ({chartAsset})</p>
                     </div>
                 </div>
                 <div className="flex-1 w-full h-[300px] min-h-[250px] relative">
