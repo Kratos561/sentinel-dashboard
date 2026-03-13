@@ -16,7 +16,7 @@ export default function Overview() {
         fetchData();
         const cleanupRealtime = setupRealtime();
         // FIX #2: Reduced from 1s to 8s to avoid TiDB query storm (86k req/day → 10k req/day)
-        const liveHFT = setInterval(fetchLiveChart, 8000);
+        const liveHFT = setInterval(fetchLiveChart, 1000); // ⚡ Real-Time InfluxDB
         return () => {
             clearInterval(liveHFT);
             cleanupRealtime(); // FIX #3: Now properly cleans up Supabase WebSocket channel

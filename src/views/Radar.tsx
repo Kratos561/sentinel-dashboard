@@ -62,7 +62,7 @@ export default function Radar() {
     useEffect(() => {
         fetchTelemetry();
         // FIX #2: Reduced from 1s to 10s — was generating 86,400 JOIN queries/day on 1.6M row table
-        const interval = setInterval(fetchTelemetry, 10000);
+        const interval = setInterval(fetchTelemetry, 1000); // ⚡ Real-Time InfluxDB
         return () => clearInterval(interval);
     }, []);
 

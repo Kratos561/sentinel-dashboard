@@ -42,7 +42,7 @@ export default function History() {
         const ch = supabase.channel('react-history-tab');
         ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchHistory);
         ch.subscribe();
-        const interval = setInterval(fetchHistory, 10000);
+        const interval = setInterval(fetchHistory, 3000); // Faster polling with InfluxDB
         return () => {
             clearInterval(interval);
             supabase.removeChannel(ch);
