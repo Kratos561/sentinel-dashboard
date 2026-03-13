@@ -90,8 +90,6 @@ export default function Overview() {
     const losses = Number(portfolio.losses);
     const wr = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
     // FIX #1: Use realPF (calculated from actual gross profit / gross loss) instead of win count ratio
-    const profitFactor = realPF;
-
     // Circular Progress Math
     const signalScore = signal?.conf ? Number(signal.conf) / 100 : 0;
     const signalPredict = signal?.predict || 'WAITING';
