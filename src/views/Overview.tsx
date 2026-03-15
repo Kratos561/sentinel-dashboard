@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getChartPrices, getLatestSignal } from '../lib/influxdb';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Activity, Terminal, BrainCircuit, Target, Wallet, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Activity, Terminal, BrainCircuit, Target, Wallet, Cpu, Zap } from 'lucide-react';
 
 export default function Overview() {
     const [portfolio, setPortfolio] = useState<any>(null);
@@ -10,42 +10,34 @@ export default function Overview() {
     const [logs, setLogs] = useState<any[]>([]);
     const [signal, setSignal] = useState<any>(null);
     const [chartAsset] = useState<string>('NASDAQ100');
-    const [realPF, setRealPF] = useState<string>('0.00');
+    const [botStatus, setBotStatus] = useState<any>(null);
 
     useEffect(() => {
         fetchData();
+        fetchBotStatus();
         const cleanupRealtime = setupRealtime();
-        // FIX #2: Reduced from 1s to 8s to avoid TiDB query storm (86k req/day → 10k req/day)
-        const liveHFT = setInterval(fetchLiveChart, 1000); // ⚡ Real-Time InfluxDB
+        const liveHFT = setInterval(fetchLiveChart, 1000);
+        const botPoll = setInterval(fetchBotStatus, 30000);
         return () => {
             clearInterval(liveHFT);
-            cleanupRealtime(); // FIX #3: Now properly cleans up Supabase WebSocket channel
+            clearInterval(botPoll);
+            cleanupRealtime();
         };
     }, []);
+
+    const fetchBotStatus = async () => {
+        try {
+            const res = await fetch('https://p01--sentinel-advance--blnvcmgxk6zh.code.run/');
+            if (res.ok) setBotStatus(await res.json());
+        } catch (e) { /* silently fail */ }
+    };
 
     const fetchData = async () => {
         // Fetch current portfolio
         const { data: pData } = await supabase.from('ghost_portfolio').select('*').limit(1);
         if (pData && pData.length > 0) setPortfolio(pData[0]);
 
-        // FIX #1: Calculate REAL Profit Factor from actual trade PnL sums, not win/loss count ratio
-        const { data: tradeData } = await supabase
-            .from('ghost_trades')
-            .select('pnl')
-            .eq('status', 'CLOSED');
-        if (tradeData && tradeData.length > 0) {
-            let grossProfit = 0;
-            let grossLoss = 0;
-            tradeData.forEach((t: any) => {
-                const pnl = parseFloat(t.pnl) || 0;
-                if (pnl >= 0) grossProfit += pnl;
-                else grossLoss += Math.abs(pnl);
-            });
-            const pf = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00');
-            setRealPF(pf);
-        }
 
-        // Fetch logs
         const { data: lData } = await supabase.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(6);
         if (lData) setLogs(lData);
     };
@@ -98,12 +90,15 @@ export default function Overview() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
             {/* Top Stat row */}
-            <div className="col-span-12 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="col-span-12 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-primary/30">
                     <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                         <Wallet size={14} className="text-primary" /> Total Equity
                     </span>
                     <h3 className="text-3xl font-mono text-white tracking-tight">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
+                    {botStatus && (
+                        <p className="text-[9px] font-mono text-slate-500 mt-2">Cycle #{botStatus.cycle} · {botStatus.portfolio?.openPositions ?? 0} open</p>
+                    )}
                 </div>
 
                 <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden border-b border-accent-green/30">
@@ -126,13 +121,34 @@ export default function Overview() {
                         <Target size={14} className="text-accent-amber" /> Global Win Rate
                     </span>
                     <h3 className="text-3xl font-mono text-accent-amber drop-shadow-[0_0_8px_rgba(255,184,0,0.4)] tracking-tight">{wr}%</h3>
+                    <p className="text-[9px] font-mono text-slate-500 mt-2">{wins}W / {losses}L</p>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-accent-green/30">
+                {/* NEW V11.3: DL Engine Status Card */}
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-primary/40 bg-[#050a16] relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-2xl" />
                     <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <ArrowUpRight size={14} className="text-accent-green" /> Profit Factor
+                        <Cpu size={14} className="text-primary" /> DL Hybrid Engine
                     </span>
-                    <h3 className="text-3xl font-mono text-accent-green drop-shadow-[0_0_8px_rgba(0,255,102,0.4)] tracking-tight">{realPF}</h3>
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-glow" />
+                            <span className="text-[11px] font-mono text-primary font-bold">V11.3 ACTIVE</span>
+                        </div>
+                        <p className="text-[9px] font-mono text-slate-500">
+                            Min Score: 68% · ADX: ≥15
+                        </p>
+                        {botStatus && (
+                            <div className="flex items-center gap-1 mt-1">
+                                <Zap size={10} className="text-accent-amber" />
+                                <span className="text-[9px] font-mono text-accent-amber">
+                                    {botStatus.valentini?.hotAssets?.length > 0
+                                        ? `${botStatus.valentini.hotAssets.length} HOT ASSET(S)`
+                                        : 'Scanning...'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -142,6 +158,11 @@ export default function Overview() {
                     <div>
                         <h3 className="text-lg font-bold text-white flex items-center gap-2"><TrendingUp className="text-primary" /> L2 Live Market Stream</h3>
                         <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Real-time InfluxDB HFT Telemetry ({chartAsset})</p>
+                    </div>
+                    {/* V11.3 DL Badge */}
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/20 rounded-xl">
+                        <BrainCircuit size={14} className="text-primary" />
+                        <span className="text-[10px] font-mono text-primary uppercase tracking-widest">DL Score Active</span>
                     </div>
                 </div>
                 <div className="flex-1 w-full h-[300px] min-h-[250px] relative">

@@ -47,8 +47,8 @@ function App() {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background-dark"></div>
           </div>
           <div className="hidden lg:flex flex-col">
-            <h1 className="text-white font-bold text-[19px] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Sentinel V11</h1>
-            <p className="text-primary/80 text-[10px] uppercase font-mono mt-1 tracking-widest">Águila Imperial</p>
+            <h1 className="text-white font-bold text-[19px] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Sentinel V11.3</h1>
+            <p className="text-primary/80 text-[10px] uppercase font-mono mt-1 tracking-widest">Águila Imperial · DL Active</p>
           </div>
         </div>
 
@@ -116,8 +116,8 @@ function App() {
                 </span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 glass-panel hidden sm:flex">
-                <div className="w-2 h-2 rounded-full bg-primary shadow-glow"></div>
-                <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-wider">Supabase Vault: SECURE</span>
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-glow"></div>
+                <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-wider">DL Engine: V11.3</span>
               </div>
               <button className="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors glass-panel border border-white/5">
                 <Bell size={16} />
