@@ -1,252 +1,279 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Activity, BrainCircuit, Cpu, Target, Terminal, TrendingUp, Wallet, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getChartPrices, getLatestSignal } from '../lib/influxdb';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Activity, Terminal, BrainCircuit, Target, Wallet, Cpu, Zap } from 'lucide-react';
+import { getChartPrices, getLatestDLPredictions, getLatestSignal, type DLPrediction, type SignalSnapshot } from '../lib/influxdb';
+
+interface PortfolioRow {
+  balance: number | string;
+  start_balance: number | string;
+  wins: number | string;
+  losses: number | string;
+  total_trades?: number | string;
+}
+
+interface ReflectionRow {
+  id: number | string;
+  analysis: string;
+  created_at: string;
+}
+
+interface BotStatus {
+  cycle?: number;
+  uptime?: number;
+  portfolio?: {
+    openPositions?: number;
+    balance?: number;
+    pnl?: number | string;
+    winRate?: string;
+    trades?: number;
+  };
+  valentini?: {
+    hotAssets?: string[];
+    killSwitch?: string;
+  };
+}
+
+interface ChartRow {
+  time: string;
+  price: number;
+  ma: number;
+}
+
+const ASSET_OPTIONS = ['NASDAQ100', 'BITCOIN', 'ORO', 'SOLANA'];
+
+function currency(value: number, digits = 2) {
+  return value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function signalTone(direction?: string) {
+  if (direction === 'LONG') return 'text-accent-green';
+  if (direction === 'SHORT') return 'text-accent-red';
+  return 'text-slate-300';
+}
+
+function movingAverage(rows: Array<{ price: number; recorded_at: string }>): ChartRow[] {
+  return rows
+    .slice()
+    .reverse()
+    .map((row, index, arr) => {
+      const start = Math.max(0, index - 8);
+      const windowRows = arr.slice(start, index + 1);
+      const ma = windowRows.reduce((sum, item) => sum + item.price, 0) / Math.max(windowRows.length, 1);
+      return {
+        time: new Date(row.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        price: Number(row.price.toFixed(row.price < 10 ? 4 : 2)),
+        ma: Number(ma.toFixed(row.price < 10 ? 4 : 2)),
+      };
+    });
+}
 
 export default function Overview() {
-    const [portfolio, setPortfolio] = useState<any>(null);
-    const [history, setHistory] = useState<any[]>([]);
-    const [logs, setLogs] = useState<any[]>([]);
-    const [signal, setSignal] = useState<any>(null);
-    const [chartAsset] = useState<string>('NASDAQ100');
-    const [botStatus, setBotStatus] = useState<any>(null);
+  const [portfolio, setPortfolio] = useState<PortfolioRow | null>(null);
+  const [history, setHistory] = useState<ChartRow[]>([]);
+  const [logs, setLogs] = useState<ReflectionRow[]>([]);
+  const [signal, setSignal] = useState<SignalSnapshot | null>(null);
+  const [dlRows, setDlRows] = useState<DLPrediction[]>([]);
+  const [chartAsset, setChartAsset] = useState(ASSET_OPTIONS[0]);
+  const [botStatus, setBotStatus] = useState<BotStatus | null>(null);
 
-    useEffect(() => {
-        fetchData();
-        fetchBotStatus();
-        const cleanupRealtime = setupRealtime();
-        const liveHFT = setInterval(fetchLiveChart, 1000);
-        const botPoll = setInterval(fetchBotStatus, 30000);
-        return () => {
-            clearInterval(liveHFT);
-            clearInterval(botPoll);
-            cleanupRealtime();
-        };
-    }, []);
+  const fetchBotStatus = async () => {
+    try {
+      const res = await fetch('https://p01--sentinel-advance--blnvcmgxk6zh.code.run/');
+      if (res.ok) setBotStatus((await res.json()) as BotStatus);
+    } catch {
+      setBotStatus(null);
+    }
+  };
 
-    const fetchBotStatus = async () => {
-        try {
-            const res = await fetch('https://p01--sentinel-advance--blnvcmgxk6zh.code.run/');
-            if (res.ok) setBotStatus(await res.json());
-        } catch (e) { /* silently fail */ }
+  const fetchData = async () => {
+    const { data: pData } = await supabase.from('ghost_portfolio').select('*').limit(1);
+    if (pData?.[0]) setPortfolio(pData[0] as PortfolioRow);
+
+    const { data: lData } = await supabase.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(6);
+    if (lData) setLogs(lData as ReflectionRow[]);
+  };
+
+  const fetchLiveChart = async () => {
+    try {
+      const [rows, latestSignal, latestDl] = await Promise.all([
+        getChartPrices(chartAsset, 80),
+        getLatestSignal(),
+        getLatestDLPredictions(8),
+      ]);
+      if (rows.length > 0) setHistory(movingAverage(rows));
+      setSignal(latestSignal);
+      setDlRows(latestDl);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const setupRealtime = () => {
+    const ch = supabase.channel('react-overview-dashboard');
+    ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, fetchData);
+    ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchData);
+    ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, fetchData);
+    ch.subscribe();
+    return () => {
+      supabase.removeChannel(ch);
     };
+  };
 
-    const fetchData = async () => {
-        // Fetch current portfolio
-        const { data: pData } = await supabase.from('ghost_portfolio').select('*').limit(1);
-        if (pData && pData.length > 0) setPortfolio(pData[0]);
-
-
-        const { data: lData } = await supabase.from('ghost_reflections').select('*').order('created_at', { ascending: false }).limit(6);
-        if (lData) setLogs(lData);
+  useEffect(() => {
+    void fetchData();
+    void fetchBotStatus();
+    const cleanupRealtime = setupRealtime();
+    const liveHFT = window.setInterval(fetchLiveChart, 3000);
+    const botPoll = window.setInterval(fetchBotStatus, 30000);
+    void fetchLiveChart();
+    return () => {
+      window.clearInterval(liveHFT);
+      window.clearInterval(botPoll);
+      cleanupRealtime();
     };
+  }, [chartAsset]);
 
-    const fetchLiveChart = async () => {
-        try {
-            const rows = await getChartPrices(chartAsset, 30);
-            if (rows && rows.length > 0) {
-                const chartData = rows.reverse().map((r: any) => ({
-                    time: new Date(r.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                    balance: Number(parseFloat(r.price).toFixed(2))
-                }));
-                setHistory(chartData);
-            }
-
-            // Sync ML Signal
-            const sData = await getLatestSignal();
-            if (sData) {
-                setSignal({ predict: sData.ml_prediction, target: sData.symbol, conf: sData.hybrid_confidence });
-            }
-        } catch (e) { console.error(e); }
-    };
-
-    const setupRealtime = (): (() => void) => {
-        const ch = supabase.channel('react-overview-dashboard');
-        ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_portfolio' }, fetchData);
-        ch.on('postgres_changes', { event: '*', schema: 'public', table: 'ghost_trades' }, fetchData);
-        ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, fetchData);
-        ch.subscribe();
-        // FIX #3: Return cleanup function so useEffect can actually call it
-        return () => { supabase.removeChannel(ch); };
-    };
-
-    if (!portfolio) return <div className="text-slate-500 animate-pulse p-10">Initializing Quantum Relays...</div>;
-
-    const startBalance = Number(portfolio.start_balance);
-    const balance = Number(portfolio.balance);
+  const metrics = useMemo(() => {
+    const startBalance = Number(portfolio?.start_balance || 0);
+    const balance = Number(portfolio?.balance || 0);
     const pnl = balance - startBalance;
-    const isProfit = pnl >= 0;
-    const pnlColor = isProfit ? 'text-accent-green' : 'text-accent-red';
-    const wins = Number(portfolio.wins);
-    const losses = Number(portfolio.losses);
-    const wr = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
-    // FIX #1: Use realPF (calculated from actual gross profit / gross loss) instead of win count ratio
-    // Circular Progress Math
-    const signalScore = signal?.conf ? Number(signal.conf) / 100 : 0;
-    const signalPredict = signal?.predict || 'WAITING';
-    const signalTarget = signal?.target || '---';
+    const wins = Number(portfolio?.wins || 0);
+    const losses = Number(portfolio?.losses || 0);
+    const winRate = wins + losses > 0 ? (wins / (wins + losses)) * 100 : 0;
+    return { startBalance, balance, pnl, wins, losses, winRate };
+  }, [portfolio]);
 
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
-            {/* Top Stat row */}
-            <div className="col-span-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-primary/30">
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Wallet size={14} className="text-primary" /> Total Equity
-                    </span>
-                    <h3 className="text-3xl font-mono text-white tracking-tight">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
-                    {botStatus && (
-                        <p className="text-[9px] font-mono text-slate-500 mt-2">Cycle #{botStatus.cycle} · {botStatus.portfolio?.openPositions ?? 0} open</p>
-                    )}
-                </div>
+  if (!portfolio) return <div className="p-10 text-sm text-slate-500 animate-pulse">Initializing Sentinel telemetry...</div>;
 
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden border-b border-accent-green/30">
-                    <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl ${isProfit ? 'bg-accent-green/20' : 'bg-accent-red/20'}`}></div>
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Activity size={14} className={pnlColor} /> Session PNL
-                    </span>
-                    <div className="flex items-baseline gap-2">
-                        <h3 className={`text-3xl font-mono tracking-tight ${pnlColor} drop-shadow-[0_0_8px_rgba(0,255,102,0.4)]`}>
-                            {isProfit ? '+' : '-'}${Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </h3>
-                        <span className={`text-[10px] font-mono ${pnlColor} opacity-80`}>
-                            {startBalance > 0 ? ((pnl / startBalance) * 100).toFixed(2) : '0'}%
-                        </span>
-                    </div>
-                </div>
+  const isProfit = metrics.pnl >= 0;
+  const signalScore = Number(signal?.hybrid_confidence || 0);
+  const latestDl = dlRows[0];
 
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-accent-amber/30">
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Target size={14} className="text-accent-amber" /> Global Win Rate
-                    </span>
-                    <h3 className="text-3xl font-mono text-accent-amber drop-shadow-[0_0_8px_rgba(255,184,0,0.4)] tracking-tight">{wr}%</h3>
-                    <p className="text-[9px] font-mono text-slate-500 mt-2">{wins}W / {losses}L</p>
-                </div>
+  return (
+    <div className="grid grid-cols-1 gap-5 pb-20 md:grid-cols-12">
+      <div className="col-span-12 grid grid-cols-2 gap-4 xl:grid-cols-5">
+        <section className="metric-card">
+          <span><Wallet size={14} /> Equity</span>
+          <strong>${currency(metrics.balance)}</strong>
+          <small>Start ${currency(metrics.startBalance)}</small>
+        </section>
+        <section className="metric-card">
+          <span><Activity size={14} /> Session PnL</span>
+          <strong className={isProfit ? 'text-accent-green' : 'text-accent-red'}>
+            {isProfit ? '+' : '-'}${currency(Math.abs(metrics.pnl))}
+          </strong>
+          <small>{metrics.startBalance > 0 ? ((metrics.pnl / metrics.startBalance) * 100).toFixed(2) : '0.00'}%</small>
+        </section>
+        <section className="metric-card">
+          <span><Target size={14} /> Win Rate</span>
+          <strong className="text-accent-amber">{metrics.winRate.toFixed(1)}%</strong>
+          <small>{metrics.wins}W / {metrics.losses}L</small>
+        </section>
+        <section className="metric-card">
+          <span><BrainCircuit size={14} /> Edge Signal</span>
+          <strong className={signalTone(signal?.direction)}>{signal?.direction || 'HOLD'}</strong>
+          <small>{signal?.symbol || 'No signal'} / {signalScore.toFixed(1)}%</small>
+        </section>
+        <section className="metric-card col-span-2 xl:col-span-1">
+          <span><Cpu size={14} /> DL Watchdog</span>
+          <strong>{latestDl ? `${(latestDl.score * 100).toFixed(1)}%` : 'SYNC'}</strong>
+          <small>{latestDl ? `${latestDl.symbol} / ${latestDl.latency_ms.toFixed(0)}ms` : 'awaiting dl_predict'}</small>
+        </section>
+      </div>
 
-                {/* NEW V11.3: DL Engine Status Card */}
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-b border-primary/40 bg-[#050a16] relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-2xl" />
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Cpu size={14} className="text-primary" /> DL Hybrid Engine
-                    </span>
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-glow" />
-                            <span className="text-[11px] font-mono text-primary font-bold">V11.3 ACTIVE</span>
-                        </div>
-                        <p className="text-[9px] font-mono text-slate-500">
-                            Min Score: 68% · ADX: ≥15
-                        </p>
-                        {botStatus && (
-                            <div className="flex items-center gap-1 mt-1">
-                                <Zap size={10} className="text-accent-amber" />
-                                <span className="text-[9px] font-mono text-accent-amber">
-                                    {botStatus.valentini?.hotAssets?.length > 0
-                                        ? `${botStatus.valentini.hotAssets.length} HOT ASSET(S)`
-                                        : 'Scanning...'}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Middle Section: Chart and Sentiment */}
-            <div className="md:col-span-8 glass-panel rounded-2xl p-6 flex flex-col min-h-[350px]">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><TrendingUp className="text-primary" /> L2 Live Market Stream</h3>
-                        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Real-time InfluxDB HFT Telemetry ({chartAsset})</p>
-                    </div>
-                    {/* V11.3 DL Badge */}
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/20 rounded-xl">
-                        <BrainCircuit size={14} className="text-primary" />
-                        <span className="text-[10px] font-mono text-primary uppercase tracking-widest">DL Score Active</span>
-                    </div>
-                </div>
-                <div className="flex-1 w-full h-[300px] min-h-[250px] relative">
-                    <ResponsiveContainer width="100%" height={300} minHeight={250}>
-                        <AreaChart data={history} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#257bf4" stopOpacity={0.4} />
-                                    <stop offset="95%" stopColor="#257bf4" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <XAxis dataKey="time" stroke="#27272a" fontSize={10} tickMargin={10} minTickGap={30} />
-                            <YAxis domain={['dataMin', 'dataMax']} stroke="#27272a" fontSize={10} tickFormatter={(val) => `$${val}`} orientation="right" width={60} />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', border: '1px solid #27272a', borderRadius: '8px', backdropFilter: 'blur(8px)' }}
-                                itemStyle={{ color: '#257bf4', fontFamily: 'monospace' }}
-                            />
-                            <Area isAnimationActive={false} type="monotone" dataKey="balance" stroke="#257bf4" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            <div className="md:col-span-4 flex flex-col gap-6">
-                {/* AI Sentiment Radial */}
-                <div className="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center relative flex-1">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2 w-full">
-                        <BrainCircuit size={16} /> Protocol Sentiment ({signalTarget})
-                    </h3>
-
-                    <div className="relative w-40 h-40 mb-4">
-                        <svg className="w-full h-full transform -rotate-90">
-                            <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="10" />
-                            <circle
-                                cx="80" cy="80" r="70" fill="none" stroke="#257bf4" strokeWidth="10" strokeLinecap="round"
-                                strokeDasharray={439.8} strokeDashoffset={439.8 - (439.8 * signalScore)}
-                                className="drop-shadow-[0_0_12px_rgba(37,123,244,0.6)] transition-all duration-1000 ease-out"
-                            />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-3xl font-bold text-white font-mono">{(signalScore * 100).toFixed(0)}%</span>
-                            <span className="text-[10px] text-primary mt-1 tracking-widest uppercase">Confidence</span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2 px-4 py-2 bg-surface-dark rounded-xl border border-white/5">
-                        <span className={`w-2 h-2 rounded-full animate-pulse ${signalPredict.includes('LONG') || signalPredict.includes('BULL') ? 'bg-accent-green' :
-                            (signalPredict.includes('SHORT') || signalPredict.includes('BEAR') ? 'bg-accent-red' : 'bg-primary')
-                            }`}></span>
-                        <p className={`text-sm font-bold tracking-widest uppercase ${signalPredict.includes('LONG') || signalPredict.includes('BULL') ? 'text-accent-green' :
-                            (signalPredict.includes('SHORT') || signalPredict.includes('BEAR') ? 'text-accent-red' : 'text-primary')
-                            }`}>{signalPredict}</p>
-                    </div>
-                </div>
-
-                {/* AI Log */}
-                <div className="glass-panel rounded-2xl p-0 flex flex-col border border-primary/20 bg-[#05080a] flex-1 overflow-hidden h-[250px]">
-                    <div className="bg-surface-dark px-4 py-3 border-b border-white/5 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <Terminal size={14} className="text-primary" />
-                            <span className="text-xs font-mono text-slate-300 uppercase tracking-wider">AI Execution Log</span>
-                        </div>
-                        <div className="flex gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-                        </div>
-                    </div>
-                    <div className="p-4 font-mono text-[11px] flex-1 overflow-y-auto space-y-2 text-slate-400">
-                        {logs.map(d => (
-                            <div key={d.id} className="flex gap-2">
-                                <span className="text-slate-600 shrink-0">[{new Date(d.created_at).toLocaleTimeString()}]</span>
-                                <span className={d.analysis.includes('WIN') || d.analysis.includes('COMPLETED') ? 'text-accent-green' : 'text-slate-300'}>
-                                    {d.analysis}
-                                </span>
-                            </div>
-                        ))}
-                        <div className="flex gap-2 pt-2">
-                            <span className="text-slate-600">Sentinel &gt;</span>
-                            <span className="text-primary cursor-blink">_</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <section className="panel col-span-12 min-h-[410px] p-5 md:col-span-8">
+        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h3 className="section-title"><TrendingUp size={17} /> Live Market Stream</h3>
+            <p className="mt-1 text-xs font-mono uppercase tracking-[0.16em] text-slate-500">{chartAsset} / InfluxDB HFT telemetry</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {ASSET_OPTIONS.map((asset) => (
+              <button
+                key={asset}
+                onClick={() => setChartAsset(asset)}
+                className={`rounded-lg border px-3 py-1.5 text-[11px] font-mono uppercase tracking-[0.12em] transition-colors ${
+                  chartAsset === asset ? 'border-primary/40 bg-primary/10 text-primary' : 'border-white/10 text-slate-500 hover:text-slate-200'
+                }`}
+              >
+                {asset}
+              </button>
+            ))}
+          </div>
         </div>
-    );
+        <div className="h-[320px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={history} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4f8cff" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="#4f8cff" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <XAxis dataKey="time" stroke="#475569" fontSize={10} tickMargin={10} minTickGap={28} />
+              <YAxis domain={['dataMin', 'dataMax']} stroke="#475569" fontSize={10} tickFormatter={(val: number) => `$${val}`} orientation="right" width={72} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#0b0f14', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8 }}
+                labelStyle={{ color: '#94a3b8' }}
+                itemStyle={{ color: '#e2e8f0' }}
+              />
+              <Area isAnimationActive={false} type="monotone" dataKey="price" name="Price" stroke="#4f8cff" strokeWidth={2} fill="url(#priceFill)" />
+              <Line isAnimationActive={false} type="monotone" dataKey="ma" name="MA9" stroke="#f2b84b" strokeWidth={1.5} dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      <aside className="col-span-12 flex flex-col gap-5 md:col-span-4">
+        <section className="panel p-5">
+          <h3 className="section-title"><BrainCircuit size={17} /> Current Read</h3>
+          <div className="mt-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">{signal?.symbol || 'No signal'}</p>
+              <p className={`mt-2 text-3xl font-semibold ${signalTone(signal?.direction)}`}>{signal?.ml_label || 'HOLD'}</p>
+              <p className="mt-2 text-xs text-slate-500">{signal?.divergence || 'no divergence'} / {signal?.liquidity_pool || 'no liquidity read'}</p>
+            </div>
+            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.02]">
+              <div className="text-center">
+                <p className="text-2xl font-semibold text-white">{signalScore.toFixed(0)}%</p>
+                <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500">Hybrid</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel min-h-[245px] overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <h3 className="section-title"><Terminal size={16} /> Execution Log</h3>
+            <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-600">Supabase</span>
+          </div>
+          <div className="max-h-[230px] space-y-2 overflow-y-auto p-4 font-mono text-[11px]">
+            {logs.map((log) => {
+              const isWin = log.analysis.includes('WIN') || log.analysis.includes('COMPLETED');
+              return (
+                <div key={log.id} className="grid grid-cols-[70px_1fr] gap-2 border-b border-white/[0.04] pb-2">
+                  <span className="text-slate-600">{new Date(log.created_at).toLocaleTimeString()}</span>
+                  <span className={isWin ? 'text-accent-green' : 'text-slate-300'}>{log.analysis}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="panel p-4">
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.16em] text-accent-amber">
+            <Zap size={13} />
+            Runtime Pulse
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="mini-stat"><span>Cycle</span><strong>#{botStatus?.cycle ?? '-'}</strong></div>
+            <div className="mini-stat"><span>Open</span><strong>{botStatus?.portfolio?.openPositions ?? 0}</strong></div>
+            <div className="mini-stat"><span>Hot</span><strong>{botStatus?.valentini?.hotAssets?.length ?? 0}</strong></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  );
 }

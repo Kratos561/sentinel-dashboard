@@ -1,173 +1,152 @@
-import { useState, useEffect } from 'react';
-import { getRadarTelemetry, getSignalHistory } from '../lib/influxdb';
-import { Crosshair, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Activity, Crosshair, Search, ShieldAlert } from 'lucide-react';
+import { getRadarTelemetry, getSignalHistory, type RadarTelemetry, type SignalSnapshot } from '../lib/influxdb';
 
-interface AssetData {
-    symbol: string;
-    price: string;
-    trend: string;
-    momentum: string;
-    volatility: string;
-    recorded_at: string;
+function formatPrice(value: number) {
+  if (Math.abs(value) < 10) return value.toFixed(4);
+  return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-interface SignalData {
-    symbol: string;
-    hybrid_confidence: number;
-    ml_prediction: string;
-    divergence: string;
-    liquidity_pool: string;
-    created_at: string;
+function momentumGauge(momentum: number) {
+  return Math.max(0, Math.min(100, 50 + momentum * 10));
+}
+
+function signalColor(direction?: string) {
+  if (direction === 'LONG') return 'text-accent-green';
+  if (direction === 'SHORT') return 'text-accent-red';
+  return 'text-slate-300';
 }
 
 export default function Radar() {
-    const [prices, setPrices] = useState<AssetData[]>([]);
-    const [signals, setSignals] = useState<SignalData[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [prices, setPrices] = useState<RadarTelemetry[]>([]);
+  const [signals, setSignals] = useState<SignalSnapshot[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const fetchTelemetry = async () => {
-        try {
-            // Get latest telemetry for all assets from InfluxDB
-            const telemetry = await getRadarTelemetry();
-            if (telemetry && telemetry.length > 0) {
-                setPrices(telemetry.map((r: any) => ({
-                    symbol: r.symbol || '',
-                    price: String(r.price || 0),
-                    trend: String(r.trend || 0),
-                    momentum: String(r.momentum || 0),
-                    volatility: String(r.volatility || 0),
-                    recorded_at: r.time || new Date().toISOString(),
-                })));
-            }
-
-            // Get latest signals
-            const sigRows = await getSignalHistory(10);
-            if (sigRows && sigRows.length > 0) {
-                setSignals(sigRows.map((r: any) => ({
-                    symbol: r.symbol || '',
-                    hybrid_confidence: parseFloat(r.hybrid_confidence) || 0,
-                    ml_prediction: r.ml_prediction || '0',
-                    divergence: r.divergence || 'none',
-                    liquidity_pool: r.liquidity_pool || 'none',
-                    created_at: r._time || new Date().toISOString(),
-                })));
-            }
-        } catch (e) {
-            console.error("InfluxDB fetch error:", e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchTelemetry();
-        // FIX #2: Reduced from 1s to 10s — was generating 86,400 JOIN queries/day on 1.6M row table
-        const interval = setInterval(fetchTelemetry, 1000); // ⚡ Real-Time InfluxDB
-        return () => clearInterval(interval);
-    }, []);
-
-    // Combine data
-    const assetsData = prices.map(p => {
-        const sig = signals.find(s => s.symbol === p.symbol) || null;
-        return {
-            ...p,
-            signal: sig,
-            // Calculate a fake RSI based on momentum just for visual flair if not provided
-            rsi: 50 + (Number(p.momentum) * 10),
-        };
-    });
-
-    if (loading && prices.length === 0) {
-        return <div className="text-primary animate-pulse font-mono tracking-widest text-center mt-20">SCANNING SATELLITE LINKS...</div>;
+  const fetchTelemetry = async () => {
+    try {
+      const [telemetry, signalRows] = await Promise.all([getRadarTelemetry(), getSignalHistory(30)]);
+      setPrices(telemetry);
+      setSignals(signalRows);
+    } catch (error) {
+      console.error('InfluxDB fetch error:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <div className="flex flex-col gap-6 h-full pb-20">
-            {/* Radar Header */}
-            <div className="glass-panel p-4 rounded-2xl flex justify-between items-center border border-accent-red/20 shadow-glow-red/10">
-                <div className="flex items-center gap-3">
-                    <Crosshair className="text-accent-red animate-pulse" size={20} />
-                    <h3 className="text-accent-red font-bold font-mono tracking-widest uppercase">Radar L2 Telemetry</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-accent-red animate-ping"></div>
-                    <span className="text-[10px] text-accent-red font-mono uppercase tracking-widest">Scanning {prices.length} Assets (10s)</span>
-                </div>
-            </div>
+  useEffect(() => {
+    void fetchTelemetry();
+    const interval = window.setInterval(fetchTelemetry, 3000);
+    return () => window.clearInterval(interval);
+  }, []);
 
-            {/* Grid layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                {assetsData.map(asset => {
-                    const priceNum = Number(asset.price);
-                    const rsi = Math.max(0, Math.min(100, asset.rsi));
-                    const isOversold = rsi < 30;
-                    const isOverbought = rsi > 70;
-                    const rsiColor = isOversold ? 'text-accent-green' : (isOverbought ? 'text-accent-red' : 'text-primary');
-                    const sig = asset.signal;
+  const latestSignalBySymbol = useMemo(() => {
+    const bySymbol = new Map<string, SignalSnapshot>();
+    signals.forEach((signal) => {
+      if (!bySymbol.has(signal.symbol)) bySymbol.set(signal.symbol, signal);
+    });
+    return bySymbol;
+  }, [signals]);
 
-                    return (
-                        <div key={asset.symbol} className="glass-panel p-5 rounded-2xl border-t border-white/5 hover:bg-white/5 transition-colors group relative overflow-hidden flex flex-col gap-4">
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Search size={14} className="text-slate-500 hover:text-white cursor-pointer" />
-                            </div>
+  const assetsData = prices.map((price) => ({
+    ...price,
+    signal: latestSignalBySymbol.get(price.symbol),
+    momentumLevel: momentumGauge(price.momentum),
+  }));
 
-                            <div className="flex justify-between items-start">
-                                <h4 className="text-xl font-bold font-mono text-white tracking-tight">{asset.symbol}</h4>
-                                {sig && sig.divergence && sig.divergence !== 'NONE' && (
-                                    <span className="text-[9px] bg-accent-amber/20 text-accent-amber px-2 py-0.5 rounded font-mono border border-accent-amber/30">
-                                        Divergence
-                                    </span>
-                                )}
-                            </div>
+  if (loading && prices.length === 0) {
+    return <div className="mt-20 text-center font-mono text-sm tracking-[0.2em] text-primary animate-pulse">SCANNING LIVE TELEMETRY...</div>;
+  }
 
-                            <div className="flex items-baseline gap-2">
-                                <h2 className="text-3xl font-mono text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-                                    {priceNum < 10 ? priceNum.toFixed(4) : priceNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </h2>
-                            </div>
-
-                            <div className="space-y-3 mt-2">
-                                {/* Momentum Gauge (FIX #4: Renamed from fake RSI to accurate MOMENTUM label) */}
-                                <div>
-                                    <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-                                        <span>MOMENTUM</span>
-                                        <span className={rsiColor}>{rsi.toFixed(1)}</span>
-                                    </div>
-                                    <div className="w-full h-1 bg-surface-dark rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full ${isOversold ? 'bg-accent-green shadow-glow-green' : (isOverbought ? 'bg-accent-red shadow-glow-red' : 'bg-primary shadow-glow')}`}
-                                            style={{ width: `${rsi}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-
-                                {/* Volatility Gauge */}
-                                <div>
-                                    <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-                                        <span>VOLATILITY</span>
-                                        <span className="text-white">{Number(asset.volatility).toFixed(4)}</span>
-                                    </div>
-                                    <div className="w-full h-1 bg-surface-dark rounded-full overflow-hidden">
-                                        <div className="h-full bg-slate-500" style={{ width: `${Math.min(100, Number(asset.volatility) * 100)}%` }}></div>
-                                    </div>
-                                </div>
-
-                                {/* ML Prediction / Confidence */}
-                                {sig && (
-                                    <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                                        <span className="text-[10px] font-mono text-slate-500">AI PREDICT</span>
-                                        <span className={`text-[11px] font-bold tracking-widest uppercase font-mono ${sig.ml_prediction.includes('LONG') ? 'text-accent-green' :
-                                            (sig.ml_prediction.includes('SHORT') ? 'text-accent-red' : 'text-slate-300')
-                                            }`}>
-                                            {sig.ml_prediction} ({sig.hybrid_confidence}%)
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+  return (
+    <div className="flex flex-col gap-5 pb-20">
+      <div className="panel flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <Crosshair className="text-primary" size={20} />
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-white">Radar L2 Telemetry</h3>
+            <p className="mt-1 text-xs text-slate-500">Live market_data + signal_data from InfluxDB</p>
+          </div>
         </div>
-    );
+        <div className="status-pill status-ok">
+          <span className="h-2 w-2 rounded-full bg-current" />
+          {prices.length} assets / 3s refresh
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {assetsData.map((asset) => {
+          const signal = asset.signal;
+          const fresh = asset.time ? Date.now() - new Date(asset.time).getTime() < 5 * 60 * 1000 : false;
+          const momentumColor = asset.momentumLevel < 35 ? 'bg-accent-red' : asset.momentumLevel > 65 ? 'bg-accent-green' : 'bg-primary';
+          const volatilityWidth = Math.min(100, Math.abs(asset.volatility) * 100);
+
+          return (
+            <section key={asset.symbol} className="panel p-4 transition-colors hover:border-white/20">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-mono text-xl font-semibold tracking-tight text-white">{asset.symbol}</h4>
+                    <span className={`h-2 w-2 rounded-full ${fresh ? 'bg-accent-green' : 'bg-accent-amber'}`} />
+                  </div>
+                  <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.16em] text-slate-600">
+                    {asset.time ? new Date(asset.time).toLocaleTimeString() : 'no timestamp'}
+                  </p>
+                </div>
+                <Search size={15} className="text-slate-600" />
+              </div>
+
+              <div className="mb-5">
+                <p className="text-3xl font-semibold tracking-tight text-white">${formatPrice(asset.price)}</p>
+                <p className="mt-1 text-xs text-slate-500">Trend {asset.trend.toFixed(3)} / Momentum {asset.momentum.toFixed(3)}</p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="mb-1 flex justify-between text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+                    <span>Momentum</span>
+                    <span>{asset.momentumLevel.toFixed(1)}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className={`h-full ${momentumColor}`} style={{ width: `${asset.momentumLevel}%` }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1 flex justify-between text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+                    <span>Volatility</span>
+                    <span>{asset.volatility.toFixed(4)}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full bg-accent-amber" style={{ width: `${volatilityWidth}%` }} />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-white/10 pt-3">
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+                    <ShieldAlert size={12} /> Signal
+                  </span>
+                  <span className={`text-right font-mono text-[11px] font-semibold uppercase tracking-[0.12em] ${signalColor(signal?.direction)}`}>
+                    {signal ? `${signal.ml_label} / ${signal.hybrid_confidence.toFixed(1)}%` : 'WAITING'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.12em] text-slate-600">
+                  <span>{signal?.divergence || 'no divergence'}</span>
+                  <span>{signal?.liquidity_pool || 'no liquidity'}</span>
+                </div>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {prices.length === 0 && (
+        <div className="panel flex items-center gap-3 p-5 text-slate-400">
+          <Activity size={18} className="text-accent-amber" />
+          Waiting for market_data telemetry.
+        </div>
+      )}
+    </div>
+  );
 }

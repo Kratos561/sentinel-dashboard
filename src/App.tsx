@@ -1,5 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Rocket, LayoutDashboard, LineChart, Brain, History as HistoryIcon, Settings, Bell, Crosshair } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Activity,
+  Bell,
+  Brain,
+  Crosshair,
+  History as HistoryIcon,
+  LayoutDashboard,
+  LineChart,
+  Rocket,
+  Settings,
+} from 'lucide-react';
 import { influxPing } from './lib/influxdb';
 import Overview from './views/Overview';
 import Radar from './views/Radar';
@@ -7,52 +17,54 @@ import ActiveTrades from './views/ActiveTrades';
 import AIIntel from './views/AIIntel';
 import History from './views/History';
 
-function App() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [tidbLatency, setTidbLatency] = useState<number | null>(null);
-  const [tidbOnline, setTidbOnline] = useState(true);
+type TabId = 'overview' | 'radar' | 'trades' | 'intel' | 'history' | 'settings';
 
-  // InfluxDB dynamic latency health check
+const navItems = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'radar', label: 'Radar', icon: Crosshair },
+  { id: 'trades', label: 'Trades', icon: LineChart },
+  { id: 'intel', label: 'AI Intel', icon: Brain },
+  { id: 'history', label: 'History', icon: HistoryIcon },
+] satisfies Array<{ id: TabId; label: string; icon: typeof LayoutDashboard }>;
+
+const titles: Record<TabId, { title: string; subtitle: string }> = {
+  overview: { title: 'Sentinel Overview', subtitle: 'Live equity, edge quality, DL signal and market stream' },
+  radar: { title: 'HFT Radar', subtitle: 'InfluxDB telemetry across active assets' },
+  trades: { title: 'Active Trades', subtitle: 'Open operations and live mark-price drift' },
+  intel: { title: 'AI Intel', subtitle: 'Core modules, DL health and reflection log' },
+  history: { title: 'History', subtitle: 'Closed operations and realized performance' },
+  settings: { title: 'Settings', subtitle: 'Runtime configuration surface' },
+};
+
+function App() {
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [influxLatency, setInfluxLatency] = useState<number | null>(null);
+
   useEffect(() => {
-    const checkInflux = async () => {
-      const latency = await influxPing();
-      if (latency !== null) {
-        setTidbLatency(latency);
-        setTidbOnline(true);
-      } else {
-        setTidbOnline(false);
-        setTidbLatency(null);
-      }
-    };
-    checkInflux();
-    const interval = setInterval(checkInflux, 15000);
-    return () => clearInterval(interval);
+    const checkInflux = async () => setInfluxLatency(await influxPing());
+    void checkInflux();
+    const interval = window.setInterval(checkInflux, 15000);
+    return () => window.clearInterval(interval);
   }, []);
 
-  const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'radar', label: 'HFT Radar', icon: Crosshair },
-    { id: 'trades', label: 'Active Trades', icon: LineChart },
-    { id: 'intel', label: 'AI Intel', icon: Brain },
-    { id: 'history', label: 'History', icon: HistoryIcon },
-  ];
+  const dbOnline = influxLatency !== null;
+  const activeTitle = titles[activeTab];
 
   return (
-    <div className="flex h-screen overflow-hidden text-slate-100 font-display">
-      {/* Sidebar */}
-      <nav className="hidden md:flex flex-col w-20 lg:w-64 h-full border-r border-white/5 bg-background-dark shrink-0 z-50">
-        <div className="p-6 flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary shadow-glow relative shrink-0">
+    <div className="flex h-screen overflow-hidden bg-background-dark text-slate-100 font-display">
+      <nav className="hidden md:flex h-full w-20 shrink-0 flex-col border-r border-white/10 bg-[#080a0d] lg:w-64">
+        <div className="flex items-center gap-3 px-4 py-5 lg:px-5">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
             <Rocket size={20} />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background-dark"></div>
+            <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#080a0d] bg-accent-green" />
           </div>
-          <div className="hidden lg:flex flex-col">
-            <h1 className="text-white font-bold text-[19px] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Sentinel V11.3</h1>
-            <p className="text-primary/80 text-[10px] uppercase font-mono mt-1 tracking-widest">Águila Imperial · DL Active</p>
+          <div className="hidden min-w-0 lg:block">
+            <h1 className="truncate text-base font-semibold tracking-tight text-white">Sentinel V12.2</h1>
+            <p className="mt-1 truncate text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">Velocity Core</p>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col gap-2 px-3">
+        <div className="flex flex-1 flex-col gap-1 px-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -60,66 +72,62 @@ function App() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive
-                  ? 'bg-primary/10 border border-primary/20 text-white shadow-glow'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
-                  }`}
+                className={`flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
+                  isActive
+                    ? 'border-primary/30 bg-primary/10 text-white'
+                    : 'border-transparent text-slate-500 hover:border-white/10 hover:bg-white/[0.03] hover:text-slate-200'
+                }`}
               >
-                <Icon size={20} className={isActive ? 'text-primary' : 'group-hover:text-primary transition-colors'} />
-                <span className="hidden lg:block text-sm font-medium">{item.label}</span>
+                <Icon size={19} className={isActive ? 'text-primary' : ''} />
+                <span className="hidden text-sm font-medium lg:block">{item.label}</span>
               </button>
-            )
+            );
           })}
         </div>
 
-        <div className="p-3 mt-auto">
+        <div className="border-t border-white/10 p-3">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`flex items-center w-full gap-3 px-3 py-3 rounded-xl transition-all group ${activeTab === 'settings' ? 'bg-primary/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Settings size={20} className="group-hover:text-primary transition-colors" />
-            <span className="hidden lg:block text-sm font-medium">Settings</span>
+            className={`flex w-full items-center gap-3 rounded-lg border px-3 py-3 transition-colors ${
+              activeTab === 'settings' ? 'border-primary/30 bg-primary/10 text-white' : 'border-transparent text-slate-500 hover:bg-white/[0.03]'
+            }`}
+          >
+            <Settings size={19} />
+            <span className="hidden text-sm font-medium lg:block">Settings</span>
           </button>
-          <div className="mt-4 pt-4 border-t border-white/5 px-3 flex items-center gap-3 hidden lg:flex">
-            <div className="h-8 w-8 rounded-full bg-slate-700 bg-cover bg-center flex items-center justify-center text-xs">
-              AT
-            </div>
-            <div className="flex flex-col text-left">
-              <p className="text-xs text-white font-medium">Alex Trader</p>
-              <p className="text-[10px] text-slate-500">Pro Account</p>
+          <div className="mt-3 hidden rounded-lg border border-white/10 bg-white/[0.02] p-3 lg:block">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.16em]">
+              <span className="text-slate-500">InfluxDB</span>
+              <span className={dbOnline ? 'text-accent-green' : 'text-accent-red'}>{dbOnline ? `${influxLatency}ms` : 'Offline'}</span>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative bg-background-dark">
-        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 via-background-dark/50 to-background-dark pointer-events-none z-0"></div>
-        <div className="relative z-10 p-4 pb-24 md:p-8 max-w-[1600px] mx-auto flex flex-col gap-6 min-h-full">
-
-          <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+      <main className="relative flex-1 overflow-y-auto">
+        <div className="mx-auto flex min-h-full max-w-[1600px] flex-col gap-5 px-4 pb-24 pt-4 md:px-8 md:py-7">
+          <header className="flex flex-col gap-4 border-b border-white/10 pb-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white tracking-tight capitalize">{activeTab.replace('-', ' ')}</h2>
-              <p className="text-slate-400 text-sm mt-1">Real-time AI analysis and portfolio tracking</p>
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
+                <Activity size={13} className="text-primary" />
+                Live Command Surface
+              </div>
+              <h2 className="text-2xl font-semibold tracking-tight text-white">{activeTitle.title}</h2>
+              <p className="mt-1 text-sm text-slate-400">{activeTitle.subtitle}</p>
             </div>
-            <div className="flex items-center gap-3">
-              {/* FIX #9: Dynamic real latency badge instead of hardcoded "ONLINE (12ms)" */}
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border glass-panel ${
-                tidbOnline ? 'bg-accent-green/10 border-accent-green/20' : 'bg-accent-red/10 border-accent-red/20'
-              }`}>
-                <div className={`w-2 h-2 rounded-full animate-pulse ${
-                  tidbOnline ? 'bg-accent-green shadow-glow-green' : 'bg-accent-red'
-                }`}></div>
-                <span className={`text-[10px] font-bold font-mono uppercase tracking-wider ${
-                  tidbOnline ? 'text-accent-green' : 'text-accent-red'
-                }`}>
-                  InfluxDB: {tidbOnline ? `ONLINE (${tidbLatency ?? '...'}ms)` : 'OFFLINE'}
-                </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className={`status-pill ${dbOnline ? 'status-ok' : 'status-bad'}`}>
+                <span className="h-2 w-2 rounded-full bg-current" />
+                InfluxDB {dbOnline ? `${influxLatency}ms` : 'offline'}
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 glass-panel hidden sm:flex">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-glow"></div>
-                <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-wider">DL Engine: V11.3</span>
+              <div className="status-pill status-ok">
+                <span className="h-2 w-2 rounded-full bg-current" />
+                DL v12.2
               </div>
-              <button className="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors glass-panel border border-white/5">
+              <button
+                aria-label="Notifications"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
                 <Bell size={16} />
               </button>
             </div>
@@ -130,12 +138,12 @@ function App() {
           {activeTab === 'trades' && <ActiveTrades />}
           {activeTab === 'intel' && <AIIntel />}
           {activeTab === 'history' && <History />}
-          {activeTab === 'settings' && <div className="glass-panel p-10 text-center text-slate-400 rounded-2xl">Settings Panel - In Development</div>}
-
+          {activeTab === 'settings' && (
+            <div className="panel p-8 text-sm text-slate-400">Settings</div>
+          )}
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-background-dark border-t border-white/5 z-50 flex items-center justify-around px-2 backdrop-blur-xl">
+        <div className="fixed bottom-0 left-0 z-50 flex h-16 w-full items-center justify-around border-t border-white/10 bg-[#080a0d]/95 px-2 backdrop-blur md:hidden">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -143,13 +151,14 @@ function App() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'text-primary' : 'text-slate-500'
-                  }`}
+                className={`flex min-w-12 flex-col items-center justify-center rounded-lg px-2 py-2 text-[10px] transition-colors ${
+                  isActive ? 'text-primary' : 'text-slate-500'
+                }`}
               >
-                <Icon size={20} className={isActive ? 'text-primary drop-shadow-[0_0_8px_rgba(19,200,236,0.6)]' : ''} />
-                <span className="text-[10px] mt-1 font-medium">{item.label.split(' ')[0]}</span>
+                <Icon size={19} />
+                <span className="mt-1">{item.label}</span>
               </button>
-            )
+            );
           })}
         </div>
       </main>

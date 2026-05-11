@@ -4,53 +4,149 @@
   --font-display: "Inter", "Roboto", sans-serif;
   --font-mono: "Fira Code", "Roboto Mono", monospace;
 
-  --color-primary: #257bf4;
-  /* Electric Blue */
-  --color-secondary: #0A0A0A;
-  --color-accent-green: #00ff66;
-  /* Neon Green */
-  --color-accent-red: #ff3366;
-  /* Cherry Red */
-  --color-accent-amber: #ffb800;
-  /* Amber for neutral alerts */
-
-  --color-surface-dark: #121214;
-  --color-background-dark: #09090b;
-  /* Deep Dark Mode */
-  --color-background-light: #f8fafc;
+  --color-primary: #4f8cff;
+  --color-accent-green: #2fd67b;
+  --color-accent-red: #ff5a7a;
+  --color-accent-amber: #f2b84b;
+  --color-surface-dark: #0d1117;
+  --color-background-dark: #06080b;
 }
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
-    background-color: var(--color-background-dark);
-    color: #e4e4e7;
-    font-family: var(--font-display);
     margin: 0;
-    min-height: 100vh;
-    background-image:
-      radial-gradient(circle at 50% -10%, rgba(37, 123, 244, 0.08) 0%, transparent 60%),
-      linear-gradient(180deg, #09090b 0%, #050505 100%);
+    background: #06080b;
+    color: #e2e8f0;
+    font-family: var(--font-display);
+  }
+
+  button {
+    cursor: pointer;
   }
 }
 
-.glass-panel {
-  background-color: rgba(18, 18, 20, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-}
+@layer components {
+  .panel {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    background: rgba(13, 17, 23, 0.82);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  }
 
-.shadow-glow {
-  box-shadow: 0 0 20px rgba(37, 123, 244, 0.3);
-}
+  .metric-card {
+    display: flex;
+    min-height: 120px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    background: rgba(13, 17, 23, 0.82);
+    padding: 1rem;
+  }
 
-.shadow-glow-red {
-  box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
-}
+  .metric-card span,
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
 
-.shadow-glow-green {
-  box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+  .metric-card strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-family: var(--font-mono);
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    line-height: 1.1;
+    color: #f8fafc;
+  }
+
+  .metric-card small {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: #64748b;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    height: 2.25rem;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .status-ok {
+    color: var(--color-accent-green);
+    border-color: rgba(47, 214, 123, 0.22);
+    background: rgba(47, 214, 123, 0.07);
+  }
+
+  .status-bad {
+    color: var(--color-accent-red);
+    border-color: rgba(255, 90, 122, 0.22);
+    background: rgba(255, 90, 122, 0.07);
+  }
+
+  .mini-stat {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.025);
+    padding: 0.65rem;
+  }
+
+  .mini-stat span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .mini-stat strong {
+    margin-top: 0.25rem;
+    display: block;
+    overflow-wrap: anywhere;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #f8fafc;
+  }
+
+  .glass-panel {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    background: rgba(13, 17, 23, 0.82);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  }
+
+  .shadow-glow,
+  .shadow-glow-red,
+  .shadow-glow-green {
+    box-shadow: none;
+  }
 }
 
 .cursor-blink {

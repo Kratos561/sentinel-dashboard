@@ -123,13 +123,13 @@ export default function History() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 font-mono text-slate-300">
-                                                ${parseFloat(t.entry_price as any) < 10 ? parseFloat(t.entry_price as any).toFixed(4) : parseFloat(t.entry_price as any).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                ${Number(t.entry_price) < 10 ? Number(t.entry_price).toFixed(4) : Number(t.entry_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-6 py-4 font-mono text-slate-300">
-                                                ${parseFloat(t.exit_price as any) < 10 ? parseFloat(t.exit_price as any).toFixed(4) : parseFloat(t.exit_price as any).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                ${Number(t.exit_price) < 10 ? Number(t.exit_price).toFixed(4) : Number(t.exit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className={`px-6 py-4 font-mono font-bold text-right text-lg tracking-tight ${pnlColorCls}`}>
-                                                {isWin ? '+' : ''}${parseFloat(t.pnl as any) < 10 ? parseFloat(t.pnl as any).toFixed(4) : parseFloat(t.pnl as any).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                {isWin ? '+' : ''}${Number(t.pnl) < 10 ? Number(t.pnl).toFixed(4) : Number(t.pnl).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 {/* FIX #11: Show full date + time, not just the hour */}
