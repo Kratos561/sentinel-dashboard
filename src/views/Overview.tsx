@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Activity, BrainCircuit, Cpu, Target, Terminal, TrendingUp, Wallet, Zap } from 'lucide-react';
+import { Activity, BrainCircuit, Cpu, Eye, ShieldCheck, Target, Terminal, TrendingUp, Wallet, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getChartPrices, getLatestDLPredictions, getLatestSignal, type DLPrediction, type SignalSnapshot } from '../lib/influxdb';
+import {
+  getChartPrices,
+  getDecisionState,
+  getLatestDLPredictions,
+  getLatestSignal,
+  getSecurityPosture,
+  type DecisionState,
+  type DLPrediction,
+  type SecurityPosture,
+  type SignalSnapshot,
+} from '../lib/influxdb';
 
 interface PortfolioRow {
   balance: number | string;
@@ -76,6 +86,8 @@ export default function Overview() {
   const [dlRows, setDlRows] = useState<DLPrediction[]>([]);
   const [chartAsset, setChartAsset] = useState(ASSET_OPTIONS[0]);
   const [botStatus, setBotStatus] = useState<BotStatus | null>(null);
+  const [decisionState, setDecisionState] = useState<DecisionState | null>(null);
+  const [securityPosture, setSecurityPosture] = useState<SecurityPosture | null>(null);
 
   const fetchBotStatus = async () => {
     try {
@@ -104,6 +116,9 @@ export default function Overview() {
       if (rows.length > 0) setHistory(movingAverage(rows));
       setSignal(latestSignal);
       setDlRows(latestDl);
+      const [decision, security] = await Promise.all([getDecisionState(), getSecurityPosture()]);
+      setDecisionState(decision);
+      setSecurityPosture(security);
     } catch (error) {
       console.error(error);
     }
@@ -149,6 +164,11 @@ export default function Overview() {
   const isProfit = metrics.pnl >= 0;
   const signalScore = Number(signal?.hybrid_confidence || 0);
   const latestDl = dlRows[0];
+  const recentEvents = decisionState?.recentEvents?.slice(0, 5) ?? [];
+  const decisionEntries = Object.entries(decisionState?.counters ?? {})
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+  const fallbackCount = Object.values(securityPosture?.secretFallbacksActive ?? {}).filter(Boolean).length;
 
   return (
     <div className="grid grid-cols-1 gap-5 pb-20 md:grid-cols-12">
@@ -181,6 +201,41 @@ export default function Overview() {
           <small>{latestDl ? `${latestDl.symbol} / ${latestDl.latency_ms.toFixed(0)}ms` : 'awaiting dl_predict'}</small>
         </section>
       </div>
+
+      <section className="panel col-span-12 grid gap-4 p-4 lg:grid-cols-4">
+        <div className="mini-stat">
+          <span>Trade Cadence</span>
+          <strong>{decisionState?.cadence.hoursSinceTrade ?? '-'}h</strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            {decisionState?.cadence.dormant ? 'Dormant reentry armed' : 'Active flow'}
+          </small>
+        </div>
+        <div className="mini-stat">
+          <span>Loss Discipline</span>
+          <strong className={(decisionState?.discipline.consecutiveLosses ?? 0) >= 3 ? 'text-accent-red' : 'text-white'}>
+            {decisionState?.discipline.consecutiveLosses ?? 0}L
+          </strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            Daily {decisionState?.discipline.dailyLosses ?? 0} / Cooldown {decisionState?.discipline.cooldownCyclesLeft ?? 0}
+          </small>
+        </div>
+        <div className="mini-stat">
+          <span>Security</span>
+          <strong className={fallbackCount > 0 ? 'text-accent-amber' : 'text-accent-green'}>
+            {securityPosture?.corsMode ?? 'loading'}
+          </strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            Headers {securityPosture?.headers ? 'on' : 'off'} / fallback {fallbackCount}
+          </small>
+        </div>
+        <div className="mini-stat">
+          <span>Top Veto</span>
+          <strong>{decisionEntries[0]?.[0]?.replace(':', ' / ') ?? 'none'}</strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            {decisionEntries[0]?.[1] ?? 0} events in memory
+          </small>
+        </div>
+      </section>
 
       <section className="panel col-span-12 min-h-[410px] p-5 md:col-span-8">
         <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -241,6 +296,27 @@ export default function Overview() {
                 <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500">Hybrid</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="panel overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <h3 className="section-title"><Eye size={16} /> Sentinel Sees</h3>
+            <ShieldCheck size={15} className={fallbackCount > 0 ? 'text-accent-amber' : 'text-accent-green'} />
+          </div>
+          <div className="max-h-[230px] space-y-2 overflow-y-auto p-4 font-mono text-[11px]">
+            {recentEvents.length === 0 && <p className="text-slate-500">Waiting for decision telemetry.</p>}
+            {recentEvents.map((event) => (
+              <div key={`${event.ts}-${event.asset}-${event.action}`} className="rounded-lg border border-white/10 bg-white/[0.02] p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-400">{event.asset}</span>
+                  <span className={event.action.includes('veto') || event.action.includes('loss') ? 'text-accent-red' : event.action.includes('opened') ? 'text-accent-green' : 'text-primary'}>
+                    {event.stage}/{event.action}
+                  </span>
+                </div>
+                <p className="mt-1 truncate text-slate-600">{new Date(event.ts).toLocaleTimeString()} · {JSON.stringify(event.details ?? {}).slice(0, 120)}</p>
+              </div>
+            ))}
           </div>
         </section>
 

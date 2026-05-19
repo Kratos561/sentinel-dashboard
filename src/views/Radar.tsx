@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, Crosshair, Search, ShieldAlert } from 'lucide-react';
-import { getRadarTelemetry, getSignalHistory, type RadarTelemetry, type SignalSnapshot } from '../lib/influxdb';
+import { getDecisionState, getRadarTelemetry, getSignalHistory, type DecisionState, type RadarTelemetry, type SignalSnapshot } from '../lib/influxdb';
 
 function formatPrice(value: number) {
   if (Math.abs(value) < 10) return value.toFixed(4);
@@ -20,13 +20,15 @@ function signalColor(direction?: string) {
 export default function Radar() {
   const [prices, setPrices] = useState<RadarTelemetry[]>([]);
   const [signals, setSignals] = useState<SignalSnapshot[]>([]);
+  const [decisionState, setDecisionState] = useState<DecisionState | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchTelemetry = async () => {
     try {
-      const [telemetry, signalRows] = await Promise.all([getRadarTelemetry(), getSignalHistory(30)]);
+      const [telemetry, signalRows, decision] = await Promise.all([getRadarTelemetry(), getSignalHistory(30), getDecisionState()]);
       setPrices(telemetry);
       setSignals(signalRows);
+      setDecisionState(decision);
     } catch (error) {
       console.error('InfluxDB fetch error:', error);
     } finally {
@@ -51,6 +53,7 @@ export default function Radar() {
   const assetsData = prices.map((price) => ({
     ...price,
     signal: latestSignalBySymbol.get(price.symbol),
+    decision: decisionState?.latestByAsset?.[price.symbol],
     momentumLevel: momentumGauge(price.momentum),
   }));
 
@@ -134,6 +137,16 @@ export default function Radar() {
                 <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.12em] text-slate-600">
                   <span>{signal?.divergence || 'no divergence'}</span>
                   <span>{signal?.liquidity_pool || 'no liquidity'}</span>
+                </div>
+
+                <div className="rounded-md border border-white/10 bg-white/[0.02] px-2 py-2 font-mono text-[10px] text-slate-500">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span>Decision</span>
+                    <span className={asset.decision?.action?.includes('veto') || asset.decision?.action?.includes('closed_loss') ? 'text-accent-red' : 'text-primary'}>
+                      {asset.decision ? `${asset.decision.stage}/${asset.decision.action}` : 'waiting'}
+                    </span>
+                  </div>
+                  <p className="truncate text-slate-600">{asset.decision ? JSON.stringify(asset.decision.details ?? {}).slice(0, 100) : 'no recent decision event'}</p>
                 </div>
               </div>
             </section>

@@ -36,6 +36,59 @@ export interface DLPrediction {
   created_at: string;
 }
 
+export interface DecisionEvent {
+  ts: string;
+  asset: string;
+  stage: string;
+  action: string;
+  session?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface DecisionState {
+  generatedAt: string;
+  session: string;
+  cycle: number;
+  cadence: {
+    lastOpenedTradeAt?: string | null;
+    lastClosedTradeAt?: string | null;
+    hoursSinceTrade?: number | null;
+    dormant?: boolean;
+    dormantThresholdHours?: number;
+  };
+  discipline: {
+    consecutiveLosses: number;
+    dailyLosses: number;
+    dailyPnL: number;
+    cooldownCyclesLeft: number;
+  };
+  counters: Record<string, number>;
+  latestByAsset: Record<string, DecisionEvent>;
+  recentEvents: DecisionEvent[];
+  risk: {
+    maxRiskPerTradePct: number;
+    hybridMinScore: number;
+    lossStreakGuardStart: number;
+    lossStreakStrictStart: number;
+  };
+}
+
+export interface SecurityPosture {
+  headers: boolean;
+  rateLimitPerMinute: number;
+  corsMode: string;
+  dashboardProxy: boolean;
+  optionalReadToken: boolean;
+  secretFallbacksActive?: Record<string, boolean>;
+  influx?: {
+    configured: boolean;
+    envReady: boolean;
+    source: string;
+    bucket: string;
+    host: string;
+  };
+}
+
 async function fetchCore<T>(path: string, fallback: T): Promise<T> {
   try {
     const res = await fetch(`${SENTINEL_CORE_URL}${path}`, {
@@ -130,4 +183,12 @@ export async function getLatestDLPredictions(limit = 8): Promise<DLPrediction[]>
 export async function influxPing(): Promise<number | null> {
   const result = await fetchCore<{ latencyMs: number | null }>('/api/influx-ping', { latencyMs: null });
   return result.latencyMs;
+}
+
+export async function getDecisionState(): Promise<DecisionState | null> {
+  return fetchCore<DecisionState | null>('/api/decision-state', null);
+}
+
+export async function getSecurityPosture(): Promise<SecurityPosture | null> {
+  return fetchCore<SecurityPosture | null>('/api/security', null);
 }

@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { BrainCircuit, ShieldCheck, TerminalSquare, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getLatestDLPredictions, type DLPrediction } from '../lib/influxdb';
+import {
+  getDecisionState,
+  getLatestDLPredictions,
+  getSecurityPosture,
+  type DecisionState,
+  type DLPrediction,
+  type SecurityPosture,
+} from '../lib/influxdb';
 
 interface ReflectionRow {
   id: number | string;
@@ -33,7 +40,7 @@ const MODULES = [
   { label: 'Kelly Sizing', value: 'TENTH', tone: 'text-accent-amber', desc: 'Risk is capped and sized by edge, not fixed impulse.' },
   { label: 'DCA', value: 'REMOVED', tone: 'text-accent-red', desc: 'No averaging down; one clean thesis per trade.' },
   { label: 'Snowball', value: 'REMOVED', tone: 'text-accent-red', desc: 'No unchecked compounding after wins.' },
-  { label: 'Daily Kill Switch', value: '4 LOSSES', tone: 'text-accent-red', desc: 'Stops the day after repeated realized losses.' },
+  { label: 'Loss Streak Guard', value: 'ADAPTIVE', tone: 'text-accent-amber', desc: 'Raises quality and hybrid thresholds after recent realized losses.' },
   { label: 'Asset Blacklist', value: 'EURO/SUI', tone: 'text-accent-amber', desc: 'Blocks locally toxic assets until performance improves.' },
 ];
 
@@ -41,6 +48,8 @@ export default function AIIntel() {
   const [logs, setLogs] = useState<ReflectionRow[]>([]);
   const [botStatus, setBotStatus] = useState<BotStatus | null>(null);
   const [dlRows, setDlRows] = useState<DLPrediction[]>([]);
+  const [decisionState, setDecisionState] = useState<DecisionState | null>(null);
+  const [securityPosture, setSecurityPosture] = useState<SecurityPosture | null>(null);
 
   const fetchLogs = async () => {
     try {
@@ -64,13 +73,21 @@ export default function AIIntel() {
     setDlRows(await getLatestDLPredictions(10));
   };
 
+  const fetchDecisionIntel = async () => {
+    const [decision, security] = await Promise.all([getDecisionState(), getSecurityPosture()]);
+    setDecisionState(decision);
+    setSecurityPosture(security);
+  };
+
   useEffect(() => {
     void fetchLogs();
     void fetchBotStatus();
     void fetchDlRows();
+    void fetchDecisionIntel();
     const interval = window.setInterval(() => {
       void fetchBotStatus();
       void fetchDlRows();
+      void fetchDecisionIntel();
     }, 30000);
     const ch = supabase.channel('react-intel-tab');
     ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ghost_reflections' }, fetchLogs);
@@ -141,6 +158,25 @@ export default function AIIntel() {
 
         <section className="panel p-5">
           <div className="mb-4 flex items-center gap-3">
+            <TerminalSquare size={18} className="text-primary" />
+            <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-white">Decision Trace</h4>
+          </div>
+          <div className="space-y-2">
+            {(decisionState?.recentEvents ?? []).slice(0, 8).map((event) => (
+              <div key={`${event.ts}-${event.asset}-${event.action}`} className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs text-slate-400">{event.asset}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-primary">{event.stage}/{event.action}</span>
+                </div>
+                <p className="mt-1 truncate font-mono text-[10px] text-slate-600">{JSON.stringify(event.details ?? {}).slice(0, 140)}</p>
+              </div>
+            ))}
+            {!decisionState?.recentEvents?.length && <p className="text-sm text-slate-500">Waiting for core decision events.</p>}
+          </div>
+        </section>
+
+        <section className="panel p-5">
+          <div className="mb-4 flex items-center gap-3">
             <ShieldCheck size={18} className="text-accent-green" />
             <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-white">Control Matrix</h4>
           </div>
@@ -151,6 +187,22 @@ export default function AIIntel() {
                 <span className={`font-mono text-[11px] font-semibold ${module.tone}`}>{module.value}</span>
               </div>
             ))}
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+              <span className="text-[11px] text-slate-500">CORS Mode</span>
+              <span className="font-mono text-[11px] font-semibold text-accent-green">{securityPosture?.corsMode ?? 'loading'}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+              <span className="text-[11px] text-slate-500">Read Token</span>
+              <span className={`font-mono text-[11px] font-semibold ${securityPosture?.optionalReadToken ? 'text-accent-green' : 'text-accent-amber'}`}>
+                {securityPosture?.optionalReadToken ? 'ENFORCED' : 'OPTIONAL'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+              <span className="text-[11px] text-slate-500">Influx Env</span>
+              <span className={`font-mono text-[11px] font-semibold ${securityPosture?.influx?.envReady ? 'text-accent-green' : 'text-accent-amber'}`}>
+                {securityPosture?.influx?.envReady ? 'READY' : 'FALLBACK'}
+              </span>
+            </div>
           </div>
         </section>
 
