@@ -61,12 +61,34 @@ export interface DecisionState {
     dailyLosses: number;
     dailyPnL: number;
     cooldownCyclesLeft: number;
+    dailyRisk?: {
+      blocked: boolean;
+      cautionMode: boolean;
+      strictMode: boolean;
+      lossLimit: number;
+      maxDailyLossUsd: number;
+      recoveryPnlMin: number;
+      dailyLossCount: number;
+      dailyPnL: number;
+      consecutiveLosses: number;
+      minQualityBump: number;
+      hybridBump: number;
+      qualityPenalty: number;
+      sizeMultiplier: number;
+      reasons: string[];
+    };
   };
   counters: Record<string, number>;
   latestByAsset: Record<string, DecisionEvent>;
   recentEvents: DecisionEvent[];
   risk: {
     maxRiskPerTradePct: number;
+    maxDailyLossPct?: number;
+    maxDailyLossUsd?: number;
+    dailyLossTradesLimit?: number;
+    maxTradesPerHour?: number;
+    sameAssetCooldownMin?: number;
+    postLossCooldownMin?: number;
     hybridMinScore: number;
     lossStreakGuardStart: number;
     lossStreakStrictStart: number;
@@ -80,6 +102,7 @@ export interface SecurityPosture {
   dashboardProxy: boolean;
   optionalReadToken: boolean;
   secretFallbacksActive?: Record<string, boolean>;
+  secretEnvMissing?: Record<string, boolean>;
   influx?: {
     configured: boolean;
     envReady: boolean;

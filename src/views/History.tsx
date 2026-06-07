@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { History as HistoryIcon, Target, TrendingUp, TrendingDown, Clock, AlertCircle } from 'lucide-react';
 
@@ -49,6 +49,15 @@ export default function History() {
         };
     }, []);
 
+    const stats = useMemo(() => {
+        const wins = trades.filter((t) => Number(t.pnl) >= 0);
+        const losses = trades.length - wins.length;
+        const pnl = trades.reduce((sum, trade) => sum + Number(trade.pnl || 0), 0);
+        const avg = trades.length ? pnl / trades.length : 0;
+        const winRate = trades.length ? (wins.length / trades.length) * 100 : 0;
+        return { wins: wins.length, losses, pnl, avg, winRate };
+    }, [trades]);
+
     if (loading) return <div className="text-slate-500 animate-pulse">Scanning Historical Records...</div>;
 
     return (
@@ -63,6 +72,13 @@ export default function History() {
                     <span className="text-[10px] text-primary font-mono uppercase tracking-widest">Tracking {trades.length} Operations</span>
                 </div>
             </div>
+
+            <section className="panel grid gap-3 p-4 md:grid-cols-4">
+                <div className="mini-stat"><span>Last 50 PnL</span><strong className={stats.pnl >= 0 ? 'text-accent-green' : 'text-accent-red'}>{stats.pnl >= 0 ? '+' : '-'}${Math.abs(stats.pnl).toFixed(4)}</strong></div>
+                <div className="mini-stat"><span>Win Rate</span><strong>{stats.winRate.toFixed(1)}%</strong></div>
+                <div className="mini-stat"><span>Wins / Losses</span><strong>{stats.wins} / {stats.losses}</strong></div>
+                <div className="mini-stat"><span>Avg Trade</span><strong className={stats.avg >= 0 ? 'text-accent-green' : 'text-accent-red'}>{stats.avg >= 0 ? '+' : '-'}${Math.abs(stats.avg).toFixed(4)}</strong></div>
+            </section>
 
             <div className="glass-panel overflow-hidden border border-white/5 rounded-2xl shadow-glow/5">
                 <div className="p-6 border-b border-white/5 flex justify-between items-center bg-surface-dark relative">

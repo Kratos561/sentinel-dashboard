@@ -169,6 +169,9 @@ export default function Overview() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
   const fallbackCount = Object.values(securityPosture?.secretFallbacksActive ?? {}).filter(Boolean).length;
+  const envMissingCount = Object.values(securityPosture?.secretEnvMissing ?? {}).filter(Boolean).length;
+  const dailyRisk = decisionState?.discipline.dailyRisk;
+  const riskTone = dailyRisk?.blocked ? 'text-accent-red' : dailyRisk?.cautionMode ? 'text-accent-amber' : 'text-accent-green';
 
   return (
     <div className="grid grid-cols-1 gap-5 pb-20 md:grid-cols-12">
@@ -221,11 +224,11 @@ export default function Overview() {
         </div>
         <div className="mini-stat">
           <span>Security</span>
-          <strong className={fallbackCount > 0 ? 'text-accent-amber' : 'text-accent-green'}>
+          <strong className={envMissingCount > 0 || fallbackCount > 0 ? 'text-accent-amber' : 'text-accent-green'}>
             {securityPosture?.corsMode ?? 'loading'}
           </strong>
           <small className="mt-1 block text-[10px] text-slate-600">
-            Headers {securityPosture?.headers ? 'on' : 'off'} / fallback {fallbackCount}
+            Env missing {envMissingCount} / fallback {fallbackCount}
           </small>
         </div>
         <div className="mini-stat">
@@ -233,6 +236,37 @@ export default function Overview() {
           <strong>{decisionEntries[0]?.[0]?.replace(':', ' / ') ?? 'none'}</strong>
           <small className="mt-1 block text-[10px] text-slate-600">
             {decisionEntries[0]?.[1] ?? 0} events in memory
+          </small>
+        </div>
+      </section>
+
+      <section className="panel col-span-12 grid gap-4 p-4 md:grid-cols-4">
+        <div className="mini-stat">
+          <span>Daily Risk Guard</span>
+          <strong className={riskTone}>{dailyRisk?.blocked ? 'BLOCKED' : dailyRisk?.cautionMode ? 'CAUTION' : 'ARMED'}</strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            {dailyRisk ? `${dailyRisk.dailyLossCount}/${dailyRisk.lossLimit}L / $${dailyRisk.maxDailyLossUsd}` : 'waiting for core'}
+          </small>
+        </div>
+        <div className="mini-stat">
+          <span>Trade Throttle</span>
+          <strong>{decisionState?.risk.maxTradesPerHour ?? '-'} / h</strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            Same asset {decisionState?.risk.sameAssetCooldownMin ?? '-'}m / loss {decisionState?.risk.postLossCooldownMin ?? '-'}m
+          </small>
+        </div>
+        <div className="mini-stat">
+          <span>Hybrid Gate</span>
+          <strong>{decisionState ? `${(decisionState.risk.hybridMinScore * 100).toFixed(1)}%` : '-'}</strong>
+          <small className="mt-1 block text-[10px] text-slate-600">
+            Risk per trade {decisionState?.risk.maxRiskPerTradePct ?? '-'}%
+          </small>
+        </div>
+        <div className="mini-stat">
+          <span>Risk Reasons</span>
+          <strong className={riskTone}>{dailyRisk?.reasons?.[0] ?? 'clean'}</strong>
+          <small className="mt-1 block truncate text-[10px] text-slate-600">
+            {(dailyRisk?.reasons ?? []).slice(1, 3).join(' / ') || 'no active penalty'}
           </small>
         </div>
       </section>
@@ -302,7 +336,7 @@ export default function Overview() {
         <section className="panel overflow-hidden">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <h3 className="section-title"><Eye size={16} /> Sentinel Sees</h3>
-            <ShieldCheck size={15} className={fallbackCount > 0 ? 'text-accent-amber' : 'text-accent-green'} />
+            <ShieldCheck size={15} className={envMissingCount > 0 || fallbackCount > 0 ? 'text-accent-amber' : 'text-accent-green'} />
           </div>
           <div className="max-h-[230px] space-y-2 overflow-y-auto p-4 font-mono text-[11px]">
             {recentEvents.length === 0 && <p className="text-slate-500">Waiting for decision telemetry.</p>}

@@ -7,6 +7,7 @@ interface TradeRow {
   asset: string;
   direction: 'LONG' | 'SHORT';
   entry_price: number | string;
+  size?: number | string;
   opened_at?: string;
   status?: string;
 }
@@ -145,6 +146,7 @@ export default function ActiveTrades() {
                   <th className="px-5 py-3">Entry</th>
                   <th className="px-5 py-3">Mark</th>
                   <th className="px-5 py-3">Move</th>
+                  <th className="px-5 py-3">Live PnL</th>
                   <th className="px-5 py-3 text-right">Status</th>
                 </tr>
               </thead>
@@ -155,7 +157,9 @@ export default function ActiveTrades() {
                   const base = baseAsset(trade.asset);
                   const currentPrice = livePrices[base];
                   const entryPrice = Number(trade.entry_price);
+                  const size = Number(trade.size || 0);
                   const pnlPercent = currentPrice && entryPrice ? ((currentPrice - entryPrice) / entryPrice) * 100 * (isLong ? 1 : -1) : null;
+                  const pnlUsd = currentPrice && entryPrice && size ? (isLong ? currentPrice - entryPrice : entryPrice - currentPrice) * size : null;
                   const isProfit = (pnlPercent ?? 0) >= 0;
 
                   return (
@@ -181,6 +185,9 @@ export default function ActiveTrades() {
                         }`}>
                           {pnlPercent === null ? '--' : `${isProfit ? '+' : ''}${pnlPercent.toFixed(3)}%`}
                         </span>
+                      </td>
+                      <td className={`px-5 py-4 font-mono font-semibold ${pnlUsd === null ? 'text-slate-600' : pnlUsd >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                        {pnlUsd === null ? '--' : `${pnlUsd >= 0 ? '+' : '-'}$${Math.abs(pnlUsd).toFixed(4)}`}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <span className="font-mono text-xs uppercase tracking-[0.14em] text-accent-green">Active</span>

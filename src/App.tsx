@@ -9,8 +9,9 @@ import {
   LineChart,
   Rocket,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
-import { influxPing } from './lib/influxdb';
+import { getDecisionState, getSecurityPosture, influxPing, type DecisionState, type SecurityPosture } from './lib/influxdb';
 import Overview from './views/Overview';
 import Radar from './views/Radar';
 import ActiveTrades from './views/ActiveTrades';
@@ -39,16 +40,26 @@ const titles: Record<TabId, { title: string; subtitle: string }> = {
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [influxLatency, setInfluxLatency] = useState<number | null>(null);
+  const [decisionState, setDecisionState] = useState<DecisionState | null>(null);
+  const [securityPosture, setSecurityPosture] = useState<SecurityPosture | null>(null);
 
   useEffect(() => {
-    const checkInflux = async () => setInfluxLatency(await influxPing());
-    void checkInflux();
-    const interval = window.setInterval(checkInflux, 15000);
+    const checkRuntime = async () => {
+      const [latency, decision, security] = await Promise.all([influxPing(), getDecisionState(), getSecurityPosture()]);
+      setInfluxLatency(latency);
+      setDecisionState(decision);
+      setSecurityPosture(security);
+    };
+    void checkRuntime();
+    const interval = window.setInterval(checkRuntime, 15000);
     return () => window.clearInterval(interval);
   }, []);
 
   const dbOnline = influxLatency !== null;
   const activeTitle = titles[activeTab];
+  const dailyRisk = decisionState?.discipline.dailyRisk;
+  const envMissingCount = Object.values(securityPosture?.secretEnvMissing ?? {}).filter(Boolean).length;
+  const fallbackCount = Object.values(securityPosture?.secretFallbacksActive ?? {}).filter(Boolean).length;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background-dark text-slate-100 font-display">
@@ -139,7 +150,57 @@ function App() {
           {activeTab === 'intel' && <AIIntel />}
           {activeTab === 'history' && <History />}
           {activeTab === 'settings' && (
-            <div className="panel p-8 text-sm text-slate-400">Settings</div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+              <section className="panel p-5 lg:col-span-7">
+                <h3 className="section-title"><Settings size={17} /> Runtime Controls</h3>
+                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                  <div className="mini-stat">
+                    <span>Risk State</span>
+                    <strong className={dailyRisk?.blocked ? 'text-accent-red' : dailyRisk?.cautionMode ? 'text-accent-amber' : 'text-accent-green'}>
+                      {dailyRisk?.blocked ? 'BLOCKED' : dailyRisk?.cautionMode ? 'CAUTION' : 'ARMED'}
+                    </strong>
+                    <small className="mt-1 block text-[10px] text-slate-600">{dailyRisk?.reasons?.join(' / ') || 'clean'}</small>
+                  </div>
+                  <div className="mini-stat">
+                    <span>Daily Guard</span>
+                    <strong>{dailyRisk ? `${dailyRisk.dailyLossCount}/${dailyRisk.lossLimit}L` : '-'}</strong>
+                    <small className="mt-1 block text-[10px] text-slate-600">Net stop ${decisionState?.risk.maxDailyLossUsd ?? '-'}</small>
+                  </div>
+                  <div className="mini-stat">
+                    <span>Trade Cadence</span>
+                    <strong>{decisionState?.risk.maxTradesPerHour ?? '-'} / h</strong>
+                    <small className="mt-1 block text-[10px] text-slate-600">Same asset {decisionState?.risk.sameAssetCooldownMin ?? '-'}m</small>
+                  </div>
+                  <div className="mini-stat">
+                    <span>Hybrid Threshold</span>
+                    <strong>{decisionState ? `${(decisionState.risk.hybridMinScore * 100).toFixed(1)}%` : '-'}</strong>
+                    <small className="mt-1 block text-[10px] text-slate-600">Risk/trade {decisionState?.risk.maxRiskPerTradePct ?? '-'}%</small>
+                  </div>
+                </div>
+              </section>
+
+              <section className="panel p-5 lg:col-span-5">
+                <h3 className="section-title"><ShieldCheck size={17} /> Security Matrix</h3>
+                <div className="mt-5 space-y-3">
+                  <div className="mini-stat">
+                    <span>Secret Fallbacks</span>
+                    <strong className={fallbackCount > 0 ? 'text-accent-red' : 'text-accent-green'}>{fallbackCount > 0 ? 'ACTIVE' : 'OFF'}</strong>
+                  </div>
+                  <div className="mini-stat">
+                    <span>Required Env Missing</span>
+                    <strong className={envMissingCount > 0 ? 'text-accent-amber' : 'text-accent-green'}>{envMissingCount}</strong>
+                  </div>
+                  <div className="mini-stat">
+                    <span>Influx Source</span>
+                    <strong className={securityPosture?.influx?.envReady ? 'text-accent-green' : 'text-accent-amber'}>{securityPosture?.influx?.source ?? 'loading'}</strong>
+                  </div>
+                  <div className="mini-stat">
+                    <span>Read Token</span>
+                    <strong className={securityPosture?.optionalReadToken ? 'text-accent-green' : 'text-accent-amber'}>{securityPosture?.optionalReadToken ? 'ENFORCED' : 'OPTIONAL'}</strong>
+                  </div>
+                </div>
+              </section>
+            </div>
           )}
         </div>
 

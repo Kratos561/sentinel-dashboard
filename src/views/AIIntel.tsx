@@ -38,6 +38,7 @@ const MODULES = [
   { label: 'Regime Filter', value: 'ADX/CI', tone: 'text-accent-green', desc: 'Blocks dead chop unless Bollinger mean reversion is valid.' },
   { label: 'ATR Exits', value: '2x SL', tone: 'text-accent-green', desc: 'Stop/target/trailing exits are regime adaptive.' },
   { label: 'Kelly Sizing', value: 'TENTH', tone: 'text-accent-amber', desc: 'Risk is capped and sized by edge, not fixed impulse.' },
+  { label: 'Daily Risk Guard', value: '4L / NET', tone: 'text-accent-green', desc: 'Blocks new entries after daily loss count or net loss threshold while still managing open trades.' },
   { label: 'DCA', value: 'REMOVED', tone: 'text-accent-red', desc: 'No averaging down; one clean thesis per trade.' },
   { label: 'Snowball', value: 'REMOVED', tone: 'text-accent-red', desc: 'No unchecked compounding after wins.' },
   { label: 'Loss Streak Guard', value: 'ADAPTIVE', tone: 'text-accent-amber', desc: 'Raises quality and hybrid thresholds after recent realized losses.' },
@@ -122,7 +123,7 @@ export default function AIIntel() {
             EDGE GATE: ACTIVE<br />
             DL ENSEMBLE: NEURAL OUTPUT + TECHNICAL PRIOR<br />
             HYBRID FILTER: ORDER FLOW / ML / DIVERGENCE / LIQUIDITY / MEAN REVERSION<br />
-            RISK: ATR EXITS + TENTH KELLY + DAILY KILL SWITCH
+            RISK: ATR EXITS + TENTH KELLY + DAILY RISK GUARD + TRADE THROTTLE
           </div>
           {logs.map((log) => {
             const isWin = log.analysis.includes('WIN') || log.analysis.includes('COMPLETED') || log.analysis.includes('OPEN');
@@ -200,7 +201,19 @@ export default function AIIntel() {
             <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
               <span className="text-[11px] text-slate-500">Influx Env</span>
               <span className={`font-mono text-[11px] font-semibold ${securityPosture?.influx?.envReady ? 'text-accent-green' : 'text-accent-amber'}`}>
-                {securityPosture?.influx?.envReady ? 'READY' : 'FALLBACK'}
+                {securityPosture?.influx?.envReady ? 'READY' : 'MISSING'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+              <span className="text-[11px] text-slate-500">Secret Fallbacks</span>
+              <span className={`font-mono text-[11px] font-semibold ${Object.values(securityPosture?.secretFallbacksActive ?? {}).some(Boolean) ? 'text-accent-red' : 'text-accent-green'}`}>
+                {Object.values(securityPosture?.secretFallbacksActive ?? {}).some(Boolean) ? 'ACTIVE' : 'OFF'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+              <span className="text-[11px] text-slate-500">Env Missing</span>
+              <span className={`font-mono text-[11px] font-semibold ${Object.values(securityPosture?.secretEnvMissing ?? {}).some(Boolean) ? 'text-accent-amber' : 'text-accent-green'}`}>
+                {Object.values(securityPosture?.secretEnvMissing ?? {}).filter(Boolean).length}
               </span>
             </div>
           </div>
