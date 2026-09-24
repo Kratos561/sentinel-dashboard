@@ -1,17 +1,163 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Sentinel Command Center: live trading telemetry, DL signals, and risk dashboard."
-    />
-    <title>Sentinel Command Center</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SENTINEL 0 · JEV</title>
+<style>
+:root{--bg:#0b1220;--card:#111c33;--bd:#22345c;--tx:#e5e7eb;--mut:#8ea0c2;
+--up:#4ade80;--dn:#f87171;--warn:#fbbf24;--blue:#60a5fa;--purple:#a78bfa}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--tx);font-family:system-ui,Segoe UI,Roboto;margin:0;padding:14px}
+h1{font-size:20px;margin:0;display:inline-block}
+.hdr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.badge{border:1px solid var(--bd);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--mut)}
+.badge.on{color:var(--up);border-color:var(--up)}
+.badge.off{color:var(--dn);border-color:var(--dn)}
+.badge.mode247{color:var(--warn);border-color:var(--warn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.k{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.v{font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
+.v.sm{font-size:16px}
+.up{color:var(--up)}.dn{color:var(--dn)}.warn{color:var(--warn)}.blue{color:var(--blue)}.purple{color:var(--purple)}
+h2{font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;margin:22px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.sym{display:flex;justify-content:space-between;align-items:center}
+.choice{font-weight:700;padding:2px 8px;border-radius:6px;font-size:12px}
+.BUY{background:#0f2e1d;color:var(--up)}.SELL{background:#33121a;color:var(--dn)}.HOLD{background:#1d2740;color:var(--mut)}
+.bar{height:6px;background:#0d1730;border-radius:3px;overflow:hidden;display:flex;margin-top:6px}
+.bar span{height:100%}
+.meter{height:6px;background:#0d1730;border-radius:3px;overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:var(--blue)}
+.small{font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5}
+.plan{display:flex;gap:8px;margin-top:6px;font-size:11px}
+.plan span{background:#0d1730;border-radius:5px;padding:2px 6px;color:var(--tx)}
+.plan b{color:var(--mut);font-weight:500}
+pre{background:#0d1730;border-radius:8px;padding:10px;font-size:12px;overflow:auto;color:var(--mut)}
+.pos{margin-top:6px;padding:8px;border:1px solid var(--bd);border-radius:8px}
+.empty{color:var(--mut);font-size:13px;padding:8px}
+.foot{margin-top:24px;color:var(--mut);font-size:11px;line-height:1.7}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--dn)}
+.dot.live{background:var(--up);animation:p 1.4s infinite}@keyframes p{50%{opacity:.35}}
+a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>◈ SENTINEL 0</h1>
+  <span class="badge" id="src"><span class="dot" id="dot"></span><span id="srctxt">conectando…</span></span>
+  <span class="badge" id="mode">—</span>
+  <span class="badge" id="prov">—</span>
+  <span class="badge" id="clock">—</span>
+  <span class="badge" id="age">—</span>
+</div>
+
+<div class="grid" id="cards"></div>
+
+<h2>Posiciones abiertas</h2>
+<div id="positions" class="empty">—</div>
+
+<h2>Decisiones JEV por activo</h2>
+<div class="dgrid" id="decisions"></div>
+
+<h2>Trades</h2>
+<table id="trades"><tr><th>hora/id</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr></table>
+
+<h2>Últimos ciclos (Influx)</h2>
+<table id="cycles"><tr><th>ciclo</th><th>símbolo</th><th>hora</th><th>precio</th><th>jev</th><th>exec</th><th>lat</th><th>vol_rel</th></tr></table>
+
+<div class="foot" id="foot">
+  SENTINEL 0 — sistema de percepción + Jev (motor de decisión). Paper trading $15.<br>
+  <span id="apihint"></span>
+</div>
+
+<script>
+const qs=new URLSearchParams(location.search);
+const API=(qs.get('api')||localStorage.getItem('sentinel_api')||'').replace(/\/$/,'');
+if(qs.get('api'))localStorage.setItem('sentinel_api',qs.get('api'));
+const LIVE=!!API, INTERVAL=LIVE?1000:5000;
+let lastOk=0, lastData=null;
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>n===null||n===undefined||isNaN(n)?'—':Number(n).toFixed(d);
+const cls=v=>v>0?'up':(v<0?'dn':'');
+
+function card(k,v,cl){return `<div class="card"><div class="k">${k}</div><div class="v ${cl||''}">${v}</div></div>`}
+
+function render(d){
+  lastData=d; lastOk=Date.now();
+  $('mode').textContent='modo '+(d.mode||'—');
+  $('mode').className='badge'+(d.mode==='24/7'?' mode247':'');
+  $('prov').textContent='jev '+(d.provider||'—');
+  $('clock').textContent=d.now||'—';
+  const a=d.equity||{}, r=d.risk||{};
+  const pc=v=>fmt(v*100,0)+'%';
+  let cards='';
+  cards+=card('Equity US$',fmt(a.total)) ;
+  cards+=card('P&L US$',fmt(a.pnl_total),cls(a.pnl_total));
+  cards+=card('P&L %',fmt(a.pnl_total_pct,2)+'%',cls(a.pnl_total_pct));
+  cards+=card('Max DD',fmt(a.max_dd_pct,2)+'%',a.max_dd_pct>2?'warn':'');
+  cards+=card('Trades hoy',(r.trades_today??0)+' / '+(r.max_trades??3),(r.trades_today>=r.max_trades?'warn':''));
+  cards+=card('P&L día',fmt(r.daily_pnl,3)+'%',cls(r.daily_pnl));
+  cards+=card('Ciclos',d.cycles??0);
+  cards+=card('Errores dato',d.data_errors??0,(d.data_errors?'warn':''));
+  cards+=card('Posiciones',(d.positions||[]).length);
+  $('cards').innerHTML=cards;
+
+  const ps=d.positions||[];
+  $('positions').innerHTML=ps.length?ps.map(p=>{
+    const dec=(d.decisions||{})[p.symbol]||{}; const px=dec.price||p.entry;
+    const u=(p.side==='LONG'?(px-p.entry)/p.entry*100:(p.entry-px)/p.entry*100);
+    return `<div class="pos"><b>${p.symbol}</b> <span class="choice ${p.side==='LONG'?'BUY':'SELL'}">${p.side}</span>
+      <span class="small">entry ${p.entry} · live ${px} (<b class="${cls(u)}">${fmt(u,3)}%</b>) ·
+      SL ${p.sl}(${p.sl_pct}%) · TP ${p.tp}(${p.tp_pct}%) · hold ${p.hold_min??'—'}min · edad ${fmt(p.age_min,1)}min ·
+      MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</span></div>`}).join(''):'<div class="empty">sin posición abierta</div>';
+
+  const ds=Object.entries(d.decisions||{});
+  $('decisions').innerHTML=ds.length?ds.map(([s,x])=>{
+    const pr=x.probs||{},b=x.probs?['BUY','HOLD','SELL'].map(k=>`<span style="width:${(pr[k]||0)*100}%;background:${k==='BUY'?'var(--up)':k==='SELL'?'var(--dn)':'#31406b'}"></span>`).join(''):'';
+    const pl=x.plan?`<div class="plan"><span><b>SL</b> ${x.plan.sl_pct}%</span><span><b>TP</b> ${x.plan.tp_pct}%</span><span><b>hold</b> ${x.plan.hold_min}m</span></div>`:'';
+    return `<div class="card"><div class="sym"><b>${s}</b><span class="choice ${x.choice}">${x.choice||'—'}</span></div>
+    <div class="v sm">${x.price} <span class="small">(${fmt(x.change_1m,3)}% 1m · rango ${fmt(x.range_pos*100,0)}%)</span></div>
+    <div class="bar">${b}</div>
+    <div class="small">execute <b>${fmt((x.execute||0)*100,1)}%</b> · opp ${x.opportunity} · riesgo ${x.risk} · lat ${x.lat}ms · ${x.ts}</div>${pl}</div>`}).join(''):'<div class="empty">esperando decisiones…</div>';
+
+  const tr=(d.trades||[]).slice().reverse();
+  $('trades').innerHTML='<tr><th>hora/id</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr>'+
+   (tr.length?tr.map(t=>`<tr><td>${(t.trade_id||'').slice(-14)}</td><td>${t.sym||t.symbol||''}</td><td>${t.side}</td><td>${t.entry}</td><td>${t.exit}</td>
+   <td class="${cls(t.pnl_pct)}">${fmt(t.pnl_pct,3)}</td><td class="${cls(t.pnl_usdt)}">${fmt(t.pnl_usdt,4)}</td>
+   <td>${t.exit_reason||''}</td><td>${t.duration_min??''}</td><td>${fmt(t.mfe_pct,2)}/${fmt(t.mae_pct,2)}</td></tr>`).join(''):'<tr><td colspan=10 class="empty">sin trades aún — Jev decide abstenerse hasta tener ventaja clara</td></tr>');
+
+  const cy=(d.cycles_influx||[]);
+  $('cycles').innerHTML='<tr><th>ciclo</th><th>símbolo</th><th>hora</th><th>precio</th><th>jev</th><th>exec</th><th>lat</th><th>vol_rel</th></tr>'+
+   (cy.length?cy.map(x=>`<tr><td>${(x.cycle_id||'').replace('SNT-','').slice(-11)}</td><td>${x.symbol||''}</td><td>${(x.time||'').slice(11,19)}</td>
+   <td>${x.price}</td><td><span class="choice ${x.jev_choice}">${x.jev_choice}</span></td><td>${fmt(x.jev_execute*100,1)}%</td><td>${x.latency_ms}</td><td>${x.vol_rel}</td></tr>`).join(''):'<tr><td colspan=8 class="empty">—</td></tr>');
+
+  $('srctxt').textContent=LIVE?'EN VIVO · API':'snapshot';
+  $('dot').className='dot'+(LIVE?' live':'');
+  $('age').textContent='actualizado hace 0s';
+}
+
+async function tick(){
+  try{
+    const url=LIVE?`${API}/api/public`:`./snapshot.json?t=${Date.now()}`;
+    const r=await fetch(url,{cache:'no-store'}); if(!r.ok)throw 0;
+    render(await r.json());
+  }catch(e){
+    const age=(Date.now()-lastOk)/1000;
+    $('srctxt').textContent=LIVE?'API caída · reintentando':'sin datos';
+    $('dot').className='dot';
+    if(lastData)$('age').textContent=`último dato hace ${Math.round(age)}s`;
+  }
+}
+setInterval(()=>{ if(lastOk)$('age').textContent=`actualizado hace ${Math.round((Date.now()-lastOk)/1000)}s`},500);
+$('apihint').innerHTML=LIVE?`Fuente en vivo: ${API}/api/public (1s)`:
+ 'Modo snapshot: para modo EN VIVO 1s abrí esta página con <code>?api=https://TU-SERVICIO.code.run</code> (se guarda solo).';
+tick();setInterval(tick,INTERVAL);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
+</script>
+</body>
 </html>
