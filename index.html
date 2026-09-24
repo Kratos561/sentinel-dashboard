@@ -124,7 +124,8 @@ function render(d){
     return `<div class="card"><div class="sym"><b>${s}</b><span class="choice ${x.choice}">${x.choice||'—'}</span></div>
     <div class="v sm">${x.price} <span class="small">(${fmt(x.change_1m,3)}% 1m · rango ${fmt(x.range_pos*100,0)}%)</span></div>
     <div class="bar">${b}</div>
-    <div class="small">execute <b>${fmt((x.execute||0)*100,1)}%</b> · opp ${x.opportunity} · riesgo ${x.risk} · lat ${x.lat}ms · ${x.ts}</div>${pl}</div>`}).join(''):'<div class="empty">esperando decisiones…</div>';
+    <div class="small">execute <b>${fmt((x.execute||0)*100,1)}%</b> · opp ${x.opportunity} · riesgo ${x.risk} · lat ${x.lat}ms · ${x.ts}</div>
+    <div class="small">ofi ${x.ofi?Math.round(x.ofi*100)+'%':'—'} · vwap ${x.vwap_dist!=null?fmt(x.vwap_dist,3)+'%':'—'} · vol ${x.vol_rel}</div>${pl}</div>`}).join(''):'<div class="empty">esperando decisiones…</div>';
 
   const tr=(d.trades||[]).slice().reverse();
   $('trades').innerHTML='<tr><th>hora/id</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr>'+
