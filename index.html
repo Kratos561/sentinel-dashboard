@@ -94,13 +94,14 @@ function render(d){
   $('prov').textContent='jev '+(d.provider||'—');
   $('clock').textContent=d.now||'—';
   const a=d.equity||{}, r=d.risk||{};
+  const lim=(r.max_trades&&r.max_trades>0)?r.max_trades:'∞';
   const pc=v=>fmt(v*100,0)+'%';
   let cards='';
   cards+=card('Equity US$',fmt(a.total)) ;
   cards+=card('P&L US$',fmt(a.pnl_total),cls(a.pnl_total));
   cards+=card('P&L %',fmt(a.pnl_total_pct,2)+'%',cls(a.pnl_total_pct));
   cards+=card('Max DD',fmt(a.max_dd_pct,2)+'%',a.max_dd_pct>2?'warn':'');
-  cards+=card('Trades hoy',(r.trades_today??0)+' / '+(r.max_trades??3),(r.trades_today>=r.max_trades?'warn':''));
+  cards+=card('Trades hoy',(r.trades_today??0)+' / '+lim,((r.max_trades>0)&&(r.trades_today>=r.max_trades)?'warn':''));
   cards+=card('P&L día',fmt(r.daily_pnl,3)+'%',cls(r.daily_pnl));
   cards+=card('Ciclos',d.cycles??0);
   cards+=card('Errores dato',d.data_errors??0,(d.data_errors?'warn':''));
