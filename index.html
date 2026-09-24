@@ -5,147 +5,269 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SENTINEL 0 · JEV</title>
 <style>
-:root{--bg:#0b1220;--card:#111c33;--bd:#22345c;--tx:#e5e7eb;--mut:#8ea0c2;
---up:#4ade80;--dn:#f87171;--warn:#fbbf24;--blue:#60a5fa;--purple:#a78bfa}
-*{box-sizing:border-box}body{background:var(--bg);color:var(--tx);font-family:system-ui,Segoe UI,Roboto;margin:0;padding:14px}
-h1{font-size:20px;margin:0;display:inline-block}
-.hdr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.badge{border:1px solid var(--bd);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--mut)}
-.badge.on{color:var(--up);border-color:var(--up)}
-.badge.off{color:var(--dn);border-color:var(--dn)}
-.badge.mode247{color:var(--warn);border-color:var(--warn)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
-.k{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
-.v{font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
-.v.sm{font-size:16px}
-.up{color:var(--up)}.dn{color:var(--dn)}.warn{color:var(--warn)}.blue{color:var(--blue)}.purple{color:var(--purple)}
-h2{font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;margin:22px 0 8px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-th:first-child,td:first-child{text-align:left}
-th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase}
-.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
-.sym{display:flex;justify-content:space-between;align-items:center}
-.choice{font-weight:700;padding:2px 8px;border-radius:6px;font-size:12px}
-.BUY{background:#0f2e1d;color:var(--up)}.SELL{background:#33121a;color:var(--dn)}.HOLD{background:#1d2740;color:var(--mut)}
-.bar{height:6px;background:#0d1730;border-radius:3px;overflow:hidden;display:flex;margin-top:6px}
+:root{
+ --bg:#0b0f0d; --panel:#0f1512; --card:#151d18; --bd:#243129;
+ --tx:#e9f1ea; --mut:#82938a; --lime:#b9f26a; --lime-d:#93c94f;
+ --red:#f87171; --amber:#fbbf24; --blue:#7dd3fc; --violet:#c4b5fd;
+ --mono:'Cascadia Code',Consolas,'SF Mono',monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,'Segoe UI',Roboto;margin:0;display:flex;min-height:100vh}
+a{color:var(--lime);text-decoration:none}
+
+/* ---------- sidebar ---------- */
+aside{width:225px;background:var(--panel);border-right:1px solid var(--bd);padding:18px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px;padding:6px 10px 18px;font-weight:800;font-size:16px;letter-spacing:.4px}
+.logo .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--lime),#5fae2f);display:inline-block}
+.logo small{color:var(--mut);font-weight:500;font-size:11px;display:block}
+nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--mut);font-size:13.5px;font-weight:500;transition:.15s}
+nav a:hover{color:var(--tx);background:#182119}
+nav a.on{background:var(--lime);color:#0c1208;font-weight:700}
+nav a svg{width:15px;height:15px;flex-shrink:0}
+.side-tag{padding:4px 12px;margin-top:6px;font-size:10px;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase}
+.side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--bd);font-size:11px;color:var(--mut);line-height:1.7}
+
+/* ---------- main ---------- */
+main{flex:1;padding:20px 24px 40px;min-width:0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.top h1{font-size:19px;margin:0;font-weight:700}
+.crumb{color:var(--mut);font-size:12px}
+.badge{border:1px solid var(--bd);border-radius:999px;padding:4px 12px;font-size:11.5px;color:var(--mut);display:inline-flex;align-items:center;gap:7px}
+.badge b{color:var(--tx);font-weight:600}
+.badge.ok{color:var(--lime);border-color:#3c5a28}
+.badge.warn{color:var(--amber);border-color:#5a4a1e}
+.badge.off{color:var(--red);border-color:#5a2828}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--lime);animation:p 1.4s infinite}
+@keyframes p{50%{opacity:.25}}
+
+h2{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;margin:26px 0 10px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px}
+.k{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px}
+.v{font-size:21px;margin-top:5px;font-weight:700;font-variant-numeric:tabular-nums}
+.v.sm{font-size:15px;font-weight:600}
+.up{color:var(--lime)}.dn{color:var(--red)}.warnc{color:var(--amber)}.bluec{color:var(--blue)}
+
+/* ---------- jev loop ---------- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{border:1px solid var(--bd);background:var(--card);color:var(--mut);border-radius:999px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-weight:600}
+.tab.on{background:var(--lime);color:#0c1208;border-color:var(--lime)}
+.loop{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.loop{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.panel .head{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--bd);font-size:12.5px;font-weight:700}
+.panel .head .tag{font-size:10px;padding:2px 8px;border-radius:6px;background:#0d1730;color:var(--mut)}
+.panel .body{padding:12px 15px;overflow:auto;max-height:480px}
+pre.json{font-family:var(--mono);font-size:11.5px;line-height:1.55;margin:0;white-space:pre-wrap;word-break:break-word;color:#cfe3d6}
+.jkey{color:var(--mut)}.jstr{color:var(--lime)}.jnum{color:var(--blue)}.jbool{color:var(--violet)}.jnull{color:#5d6f66}
+.choice{font-weight:800;font-size:15px;padding:4px 14px;border-radius:9px}
+.cBUY{background:#173321;color:var(--lime)}.cSELL{background:#3a1c1c;color:var(--red)}.cHOLD{background:#1c2740;color:#a8b8dd}
+.bar{height:7px;background:#0d1512;border-radius:4px;overflow:hidden;display:flex;margin-top:8px}
 .bar span{height:100%}
-.meter{height:6px;background:#0d1730;border-radius:3px;overflow:hidden;margin-top:4px}
-.meter i{display:block;height:100%;background:var(--blue)}
-.small{font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5}
-.plan{display:flex;gap:8px;margin-top:6px;font-size:11px}
-.plan span{background:#0d1730;border-radius:5px;padding:2px 6px;color:var(--tx)}
-.plan b{color:var(--mut);font-weight:500}
-pre{background:#0d1730;border-radius:8px;padding:10px;font-size:12px;overflow:auto;color:var(--mut)}
-.pos{margin-top:6px;padding:8px;border:1px solid var(--bd);border-radius:8px}
-.empty{color:var(--mut);font-size:13px;padding:8px}
-.foot{margin-top:24px;color:var(--mut);font-size:11px;line-height:1.7}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--dn)}
-.dot.live{background:var(--up);animation:p 1.4s infinite}@keyframes p{50%{opacity:.35}}
-a{color:var(--blue)}
+.meter{height:7px;background:#0d1512;border-radius:4px;overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--lime)}
+.plan{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.plan span{background:#0d1512;border:1px solid var(--bd);border-radius:8px;padding:4px 10px;font-size:11.5px}
+.plan b{color:var(--mut);font-weight:500;margin-right:4px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mut{color:var(--mut);font-size:11.5px}
+details{margin-top:10px}details summary{cursor:pointer;color:var(--mut);font-size:11.5px}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+th,td{padding:8px 12px;border-bottom:1px solid #1b2620;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th{color:var(--mut);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;background:#111815}
+td:first-child,th:first-child{text-align:left}
+tr:last-child td{border-bottom:none}
+.empty{color:var(--mut);font-size:12.5px;padding:14px}
+.pos{margin-bottom:10px;padding:12px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--card)}
+.pill{font-size:10.5px;padding:2px 8px;border-radius:6px;font-weight:700}
+.foot{margin-top:26px;color:var(--mut);font-size:11px;line-height:1.8}
+code{background:#0d1512;border:1px solid var(--bd);border-radius:5px;padding:1px 6px;font-size:11px}
+@media(max-width:820px){aside{display:none}main{padding:14px}}
 </style>
 </head>
 <body>
-<div class="hdr">
-  <h1>◈ SENTINEL 0</h1>
-  <span class="badge" id="src"><span class="dot" id="dot"></span><span id="srctxt">conectando…</span></span>
-  <span class="badge" id="mode">—</span>
-  <span class="badge" id="prov">—</span>
-  <span class="badge" id="clock">—</span>
-  <span class="badge" id="age">—</span>
-</div>
+<aside>
+  <div class="logo"><span class="dot"></span><div>SENTINEL 0<small>percepción + JEV</small></div></div>
+  <div class="side-tag">Panel</div>
+  <nav>
+    <a href="#overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Resumen</a>
+    <a href="#loop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h12M4 7l3-3M4 7l3 3"/><path d="M20 17H8m12 0l-3-3m3 3l-3 3"/></svg>Ciclo Jev</a>
+    <a href="#positions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M5 10l7-7 7 7"/></svg>Posiciones</a>
+    <a href="#trades"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg>Trades</a>
+    <a href="#cycles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Ciclos</a>
+  </nav>
+  <div class="side-tag">Enlaces</div>
+  <nav>
+    <a href="https://github.com/Kratos561/sentinel-0" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9 19v-3a4 4 0 118 0v3"/></svg>Repositorio</a>
+  </nav>
+  <div class="side-foot">
+    <div id="srcline">conectando…</div>
+    <div id="sessline">—</div>
+  </div>
+</aside>
 
-<div class="grid" id="cards"></div>
+<main>
+  <div class="top">
+    <div>
+      <div class="crumb">Panel / <span id="crumb">Resumen</span></div>
+      <h1>◈ SENTINEL 0 <span class="mut" style="font-size:12px;font-weight:400">paper $15 · 24/7</span></h1>
+    </div>
+    <span style="flex:1"></span>
+    <span class="badge" id="src"><span class="pulse"></span><span id="srctxt">conectando…</span></span>
+    <span class="badge" id="mode">—</span>
+    <span class="badge" id="prov">—</span>
+    <span class="badge" id="clock">—</span>
+    <span class="badge" id="age">—</span>
+  </div>
 
-<h2>Posiciones abiertas</h2>
-<div id="positions" class="empty">—</div>
+  <h2 id="overview">Resumen</h2>
+  <div class="grid" id="cards"></div>
 
-<h2>Decisiones JEV por activo</h2>
-<div class="dgrid" id="decisions"></div>
+  <h2 id="loop">Ciclo Jev — lo que Sentinel envía ⟷ lo que Jev devuelve</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="loop">
+    <div class="panel">
+      <div class="head">SENTINEL → JEV <span class="tag" id="stateTs">—</span><span style="flex:1"></span><span class="mut" id="stateBytes"></span></div>
+      <div class="body"><pre class="json" id="stateJson">—</pre></div>
+    </div>
+    <div class="panel">
+      <div class="head">JEV → SENTINEL <span class="tag" id="decTs">—</span><span style="flex:1"></span><span class="mut" id="decLat"></span></div>
+      <div class="body" id="decBody"><div class="empty">esperando decisiones…</div></div>
+    </div>
+  </div>
 
-<h2>Trades</h2>
-<table id="trades"><tr><th>hora/id</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr></table>
+  <h2 id="positions">Posiciones abiertas</h2>
+  <div id="positions_box" class="empty">—</div>
 
-<h2>Últimos ciclos (Influx)</h2>
-<table id="cycles"><tr><th>ciclo</th><th>símbolo</th><th>hora</th><th>precio</th><th>jev</th><th>exec</th><th>lat</th><th>vol_rel</th></tr></table>
+  <h2 id="trades">Trades</h2>
+  <table id="trades_tbl"><tr><th>ciclo</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr></table>
 
-<div class="foot" id="foot">
-  SENTINEL 0 — sistema de percepción + Jev (motor de decisión). Paper trading $15.<br>
-  <span id="apihint"></span>
-</div>
+  <h2 id="cycles">Últimos ciclos (Influx)</h2>
+  <table id="cycles_tbl"><tr><th>ciclo</th><th>símbolo</th><th>hora</th><th>precio</th><th>jev</th><th>exec</th><th>lat</th><th>vol</th><th>ofi</th></tr></table>
+
+  <div class="foot" id="foot">
+    SENTINEL 0 — percepción + memoria + ejecución · JEV — motor de decisión.<br>
+    <span id="apihint"></span>
+  </div>
+</main>
 
 <script>
 const qs=new URLSearchParams(location.search);
 const DEFAULT_API="https://p01--sentinel-0--blnvcmgxk6zh.code.run";
-const BAD=/XXXX|TU-SERVICIO|OTRO\.code|example/i;   // jamás usar placeholders guardados
+const BAD=/XXXX|TU-SERVICIO|OTRO\.code|example/i;
 const CANDS=[...(new Set([qs.get('api'),localStorage.getItem('sentinel_api'),DEFAULT_API]
   .filter(u=>u&&!BAD.test(u))))].map(u=>u.replace(/\/$/,''));
 let ci=0, API=CANDS[ci]||'', LIVE=API.startsWith('http'), fails=0, rounds=0;
 if(qs.get('api'))localStorage.setItem('sentinel_api',qs.get('api'));
-const INTERVAL=()=>LIVE?1000:5000;
-let lastOk=0, lastData=null;
+let lastOk=0, lastData=null, sel=localStorage.getItem('sentinel_sel')||'';
+
 const $=id=>document.getElementById(id);
 const fmt=(n,d=2)=>n===null||n===undefined||isNaN(n)?'—':Number(n).toFixed(d);
 const cls=v=>v>0?'up':(v<0?'dn':'');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
-function card(k,v,cl){return `<div class="card"><div class="k">${k}</div><div class="v ${cl||''}">${v}</div></div>`}
+function hl(json){
+  return esc(json)
+    .replace(/&quot;/g,'"')
+    .replace(/"([^"]+)":/g,'<span class="jkey">"$1"</span>:')
+    .replace(/: "([^"]*)"/g,': <span class="jstr">"$1"</span>')
+    .replace(/: (-?\d+\.?\d*)/g,': <span class="jnum">$1</span>')
+    .replace(/: (true|false)/g,': <span class="jbool">$1</span>')
+    .replace(/: null/g,': <span class="jnull">null</span>');
+}
+function card(k,v,c){return `<div class="card"><div class="k">${k}</div><div class="v ${c||''}">${v}</div></div>`}
 
 function render(d){
   lastData=d; lastOk=Date.now();
-  $('mode').textContent='modo '+(d.mode||'—');
-  $('mode').className='badge'+(d.mode==='24/7'?' mode247':'');
-  $('prov').textContent='jev '+(d.provider||'—');
+  $('mode').innerHTML='modo <b>'+(d.mode||'—')+'</b>';
+  $('mode').className='badge'+(d.mode==='24/7'?' warn':'');
+  $('prov').innerHTML='jev <b>'+(d.provider||'—')+'</b>';
   $('clock').textContent=d.now||'—';
+  $('srcline').textContent=(LIVE?'API en vivo · 1s':'modo snapshot')+' · build v5';
+  $('sessline').textContent=d.now||'—';
+
   const a=d.equity||{}, r=d.risk||{};
   const lim=(r.max_trades&&r.max_trades>0)?r.max_trades:'∞';
-  const pc=v=>fmt(v*100,0)+'%';
-  let cards='';
-  cards+=card('Equity US$',fmt(a.total)) ;
-  cards+=card('P&L US$',fmt(a.pnl_total),cls(a.pnl_total));
-  cards+=card('P&L %',fmt(a.pnl_total_pct,2)+'%',cls(a.pnl_total_pct));
-  cards+=card('Max DD',fmt(a.max_dd_pct,2)+'%',a.max_dd_pct>2?'warn':'');
-  cards+=card('Trades hoy',(r.trades_today??0)+' / '+lim,((r.max_trades>0)&&(r.trades_today>=r.max_trades)?'warn':''));
-  cards+=card('P&L día',fmt(r.daily_pnl,3)+'%',cls(r.daily_pnl));
-  cards+=card('Ciclos',d.cycles??0);
-  cards+=card('Errores dato',d.data_errors??0,(d.data_errors?'warn':''));
-  cards+=card('Posiciones',(d.positions||[]).length);
-  $('cards').innerHTML=cards;
+  let c='';
+  c+=card('Equity US$',fmt(a.total));
+  c+=card('P&L US$',fmt(a.pnl_total),cls(a.pnl_total));
+  c+=card('P&L %',fmt(a.pnl_total_pct,2)+'%',cls(a.pnl_total_pct));
+  c+=card('Max DD',fmt(a.max_dd_pct,2)+'%',a.max_dd_pct>2?'warnc':'');
+  c+=card('Trades hoy',(r.trades_today??0)+' / '+lim);
+  c+=card('P&L día',fmt(r.daily_pnl,3)+'%',cls(r.daily_pnl));
+  c+=card('Ciclos',d.cycles??0);
+  c+=card('Errores dato',d.data_errors??0,(d.data_errors?'warnc':''));
+  $('cards').innerHTML=c;
 
+  // ---- tabs por simbolo
+  const dec=d.decisions||{};
+  const syms=Object.keys(dec);
+  if(syms.length){
+    if(!sel||!dec[sel]) sel=syms[0];
+    $('tabs').innerHTML=syms.map(s=>`<button class="tab ${s===sel?'on':''}" onclick="pick('${s}')">${s}</button>`).join('');
+  }
+  const x=dec[sel];
+  if(x){
+    $('stateTs').textContent='ciclo '+x.ts;
+    $('decTs').textContent='ciclo '+x.ts;
+    $('decLat').textContent=(x.lat||'—')+' ms';
+    const st=JSON.stringify(x.state_sent||{},null,1);
+    $('stateJson').innerHTML=hl(st);
+    $('stateBytes').textContent=(new Blob([st]).size)+' B';
+    const pr=x.probs||{};
+    const bar=['BUY','HOLD','SELL'].map(k=>`<span style="width:${(pr[k]||0)*100}%;background:${k==='BUY'?'var(--lime)':k==='SELL'?'var(--red)':'#31406b'}"></span>`).join('');
+    const plan=x.plan?`<div class="plan"><span><b>SL</b>${x.plan.sl_pct}%</span><span><b>TP</b>${x.plan.tp_pct}%</span><span><b>hold</b>${x.plan.hold_min}min</span><span><b>fuente</b>Jev</span></div>`:'';
+    const d2=x.decision_full||{};
+    $('decBody').innerHTML=`
+      <div class="row"><span class="choice c${x.choice||'HOLD'}">${x.choice||'—'}</span>
+        <span class="mut">confianza ${fmt((x.confidence||0)*100,0)}%</span></div>
+      <div class="bar">${bar}</div>
+      <div class="mut" style="margin-top:6px">BUY ${fmt((pr.BUY||0)*100,0)}% · HOLD ${fmt((pr.HOLD||0)*100,0)}% · SELL ${fmt((pr.SELL||0)*100,0)}%</div>
+      <div style="margin-top:12px"><div class="row"><span class="k">Ejecutar</span><b>${fmt((x.execute||0)*100,1)}%</b></div>
+        <div class="meter"><i style="width:${(x.execute||0)*100}%"></i></div></div>
+      <div class="grid" style="margin-top:12px;grid-template-columns:1fr 1fr">
+        <div class="card" style="padding:10px 12px"><div class="k">Oportunidad</div><div class="v sm">${x.opportunity??'—'}/10</div></div>
+        <div class="card" style="padding:10px 12px"><div class="k">Riesgo</div><div class="v sm">${x.risk??'—'}/10</div></div>
+      </div>${plan}
+      <details><summary>ver respuesta cruda de Jev</summary><pre class="json">${hl(JSON.stringify(d2,null,1))}</pre></details>`;
+  } else {
+    $('stateJson').textContent='—';
+    $('decBody').innerHTML='<div class="empty">esperando decisiones…</div>';
+  }
+
+  // ---- posiciones
   const ps=d.positions||[];
-  $('positions').innerHTML=ps.length?ps.map(p=>{
-    const dec=(d.decisions||{})[p.symbol]||{}; const px=dec.price||p.entry;
+  $('positions_box').innerHTML=ps.length?ps.map(p=>{
+    const dd=dec[p.symbol]||{}; const px=dd.price||p.entry;
     const u=(p.side==='LONG'?(px-p.entry)/p.entry*100:(p.entry-px)/p.entry*100);
-    return `<div class="pos"><b>${p.symbol}</b> <span class="choice ${p.side==='LONG'?'BUY':'SELL'}">${p.side}</span>
-      <span class="small">entry ${p.entry} · live ${px} (<b class="${cls(u)}">${fmt(u,3)}%</b>) ·
-      SL ${p.sl}(${p.sl_pct}%) · TP ${p.tp}(${p.tp_pct}%) · hold ${p.hold_min??'—'}min · edad ${fmt(p.age_min,1)}min ·
-      MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</span></div>`}).join(''):'<div class="empty">sin posición abierta</div>';
+    return `<div class="pos"><div class="row"><span><b>${p.symbol}</b> <span class="pill ${p.side==='LONG'?'cBUY':'cSELL'}">${p.side}</span></span>
+      <b class="${cls(u)}">${fmt(u,3)}%</b></div>
+      <div class="mut" style="margin-top:6px">entry ${p.entry} · SL ${p.sl} (${p.sl_pct}%) · TP ${p.tp} (${p.tp_pct}%) · hold ${p.hold_min??'—'}min · edad ${fmt(p.age_min,1)}min · MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</div></div>`;
+  }).join(''):'<div class="empty">sin posición abierta</div>';
 
-  const ds=Object.entries(d.decisions||{});
-  $('decisions').innerHTML=ds.length?ds.map(([s,x])=>{
-    const pr=x.probs||{},b=x.probs?['BUY','HOLD','SELL'].map(k=>`<span style="width:${(pr[k]||0)*100}%;background:${k==='BUY'?'var(--up)':k==='SELL'?'var(--dn)':'#31406b'}"></span>`).join(''):'';
-    const pl=x.plan?`<div class="plan"><span><b>SL</b> ${x.plan.sl_pct}%</span><span><b>TP</b> ${x.plan.tp_pct}%</span><span><b>hold</b> ${x.plan.hold_min}m</span></div>`:'';
-    return `<div class="card"><div class="sym"><b>${s}</b><span class="choice ${x.choice}">${x.choice||'—'}</span></div>
-    <div class="v sm">${x.price} <span class="small">(${fmt(x.change_1m,3)}% 1m · rango ${fmt(x.range_pos*100,0)}%)</span></div>
-    <div class="bar">${b}</div>
-    <div class="small">execute <b>${fmt((x.execute||0)*100,1)}%</b> · opp ${x.opportunity} · riesgo ${x.risk} · lat ${x.lat}ms · ${x.ts}</div>
-    <div class="small">ofi ${x.ofi?Math.round(x.ofi*100)+'%':'—'} · vwap ${x.vwap_dist!=null?fmt(x.vwap_dist,3)+'%':'—'} · vol ${x.vol_rel}</div>${pl}</div>`}).join(''):'<div class="empty">esperando decisiones…</div>';
-
+  // ---- trades
   const tr=(d.trades||[]).slice().reverse();
-  $('trades').innerHTML='<tr><th>hora/id</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr>'+
-   (tr.length?tr.map(t=>`<tr><td>${(t.trade_id||'').slice(-14)}</td><td>${t.sym||t.symbol||''}</td><td>${t.side}</td><td>${t.entry}</td><td>${t.exit}</td>
+  $('trades_tbl').innerHTML='<tr><th>ciclo</th><th>símbolo</th><th>lado</th><th>entry</th><th>exit</th><th>pnl%</th><th>US$</th><th>motivo</th><th>dur</th><th>MFE/MAE</th></tr>'+
+   (tr.length?tr.map(t=>`<tr><td>${(t.trade_id||'').replace('SNT-','').slice(-11)}</td><td>${t.sym||t.symbol||''}</td><td>${t.side}</td><td>${t.entry}</td><td>${t.exit}</td>
    <td class="${cls(t.pnl_pct)}">${fmt(t.pnl_pct,3)}</td><td class="${cls(t.pnl_usdt)}">${fmt(t.pnl_usdt,4)}</td>
-   <td>${t.exit_reason||''}</td><td>${t.duration_min??''}</td><td>${fmt(t.mfe_pct,2)}/${fmt(t.mae_pct,2)}</td></tr>`).join(''):'<tr><td colspan=10 class="empty">sin trades aún — Jev decide abstenerse hasta tener ventaja clara</td></tr>');
+   <td>${t.exit_reason||''}</td><td>${t.duration_min??''}</td><td>${fmt(t.mfe_pct,2)}/${fmt(t.mae_pct,2)}</td></tr>`).join('')
+   :'<tr><td colspan=10 class="empty">sin trades aún — Jev decide abstenerse hasta tener ventaja clara</td></tr>');
 
-  const cy=(d.cycles_influx||[]);
-  $('cycles').innerHTML='<tr><th>ciclo</th><th>símbolo</th><th>hora</th><th>precio</th><th>jev</th><th>exec</th><th>lat</th><th>vol_rel</th></tr>'+
-   (cy.length?cy.map(x=>`<tr><td>${(x.cycle_id||'').replace('SNT-','').slice(-11)}</td><td>${x.symbol||''}</td><td>${(x.time||'').slice(11,19)}</td>
-   <td>${x.price}</td><td><span class="choice ${x.jev_choice}">${x.jev_choice}</span></td><td>${fmt(x.jev_execute*100,1)}%</td><td>${x.latency_ms}</td><td>${x.vol_rel}</td></tr>`).join(''):'<tr><td colspan=8 class="empty">—</td></tr>');
+  // ---- ciclos
+  const cy=d.cycles_influx||[];
+  $('cycles_tbl').innerHTML='<tr><th>ciclo</th><th>símbolo</th><th>hora</th><th>precio</th><th>jev</th><th>exec</th><th>lat</th><th>vol</th><th>ofi</th></tr>'+
+   (cy.length?cy.map(o=>`<tr><td>${(o.cycle_id||'').replace('SNT-','').slice(-11)}</td><td>${o.symbol||''}</td><td>${(o.time||'').slice(11,19)}</td>
+   <td>${o.price}</td><td><span class="pill c${o.jev_choice}">${o.jev_choice}</span></td><td>${fmt(o.jev_execute*100,1)}%</td><td>${o.latency_ms}</td><td>${fmt(o.vol_rel,2)}</td><td>${o.buy_ratio?Math.round(o.buy_ratio*100)+'%':'—'}</td></tr>`).join('')
+   :'<tr><td colspan=9 class="empty">—</td></tr>');
 
   $('srctxt').textContent=LIVE?'EN VIVO · API':'snapshot';
-  $('dot').className='dot'+(LIVE?' live':'');
-  $('age').textContent='actualizado hace 0s';
+  $('src').className='badge '+(LIVE?'ok':'warn');
+  $('age').textContent='hace 0s';
 }
+window.pick=s=>{sel=s;localStorage.setItem('sentinel_sel',s);if(lastData)render(lastData)};
 
 async function tick(){
   try{
@@ -154,22 +276,19 @@ async function tick(){
     render(await r.json()); fails=0;
   }catch(e){
     fails++;
-    if(fails>=3 && CANDS.length>1){          // self-heal: rota a la proxima URL
-      ci=(ci+1)%CANDS.length; rounds++;
-      if(rounds>=CANDS.length*2){            // dio dos vueltas sin exito -> snapshot
-        LIVE=false; API='';
-      } else { API=CANDS[ci]; LIVE=API.startsWith('http'); }
-      fails=0;
-    }
-    const age=(Date.now()-lastOk)/1000;
+    if(fails>=3&&CANDS.length>1){ci=(ci+1)%CANDS.length;rounds++;
+      if(rounds>=CANDS.length*2){LIVE=false;API='';}else{API=CANDS[ci];LIVE=API.startsWith('http');}fails=0;}
     $('srctxt').textContent=LIVE?'API caída · reintentando':'sin datos';
-    $('dot').className='dot';
-    if(lastData)$('age').textContent=`último dato hace ${Math.round(age)}s`;
+    $('src').className='badge off';
+    if(lastData)$('age').textContent=`último dato hace ${Math.round((Date.now()-lastOk)/1000)}s`;
   }
 }
-setInterval(()=>{ if(lastOk)$('age').textContent=`actualizado hace ${Math.round((Date.now()-lastOk)/1000)}s`},500);
-$('apihint').innerHTML=LIVE?`Fuente en vivo: ${API}/api/public (refresco 1s)`:
- 'Modo snapshot. Para forzar otra URL: <code>?api=https://OTRO.code.run</code>';
+setInterval(()=>{if(lastOk)$('age').textContent=`hace ${Math.round((Date.now()-lastOk)/1000)}s`},500);
+document.querySelectorAll('nav a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{
+  document.querySelectorAll('nav a').forEach(n=>n.classList.remove('on'));a.classList.add('on');
+  $('crumb').textContent=a.textContent;
+}));
+$('apihint').innerHTML=LIVE?`Fuente en vivo: ${API}/api/public (1s)`:'Modo snapshot. Forzar URL: <code>?api=https://OTRO.code.run</code>';
 tick();setInterval(tick,1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 </script>
