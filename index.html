@@ -263,7 +263,7 @@ function render(d){
     const d2=x.decision_full||{};
     $('decBody').innerHTML=`
       <div class="row"><span class="choice c${x.choice||'HOLD'}">${x.choice||'—'}</span>
-        <span class="mut">confianza ${fmt((x.confidence||0)*100,0)}%</span></div>
+        <span class="mut">setup <b>${x.setup||'NONE'}</b> · confianza ${fmt((x.confidence||0)*100,0)}%</span></div>
       <div class="bar">${bar}</div>
       <div class="mut" style="margin-top:6px">BUY ${fmt((pr.BUY||0)*100,0)}% · HOLD ${fmt((pr.HOLD||0)*100,0)}% · SELL ${fmt((pr.SELL||0)*100,0)}%</div>
       <div style="margin-top:12px"><div class="row"><span class="k">Ejecutar</span><b>${fmt((x.execute||0)*100,1)}%</b></div>
