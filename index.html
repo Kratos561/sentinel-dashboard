@@ -77,7 +77,8 @@ a{color:var(--blue)}
 
 <script>
 const qs=new URLSearchParams(location.search);
-const API=(qs.get('api')||localStorage.getItem('sentinel_api')||'').replace(/\/$/,'');
+const DEFAULT_API="https://p01--sentinel-0--blnvcmgxk6zh.code.run";
+const API=(qs.get('api')||localStorage.getItem('sentinel_api')||DEFAULT_API).replace(/\/$/,'');
 if(qs.get('api'))localStorage.setItem('sentinel_api',qs.get('api'));
 const LIVE=!!API, INTERVAL=LIVE?1000:5000;
 let lastOk=0, lastData=null;
@@ -156,8 +157,8 @@ async function tick(){
   }
 }
 setInterval(()=>{ if(lastOk)$('age').textContent=`actualizado hace ${Math.round((Date.now()-lastOk)/1000)}s`},500);
-$('apihint').innerHTML=LIVE?`Fuente en vivo: ${API}/api/public (1s)`:
- 'Modo snapshot: para modo EN VIVO 1s abrí esta página con <code>?api=https://TU-SERVICIO.code.run</code> (se guarda solo).';
+$('apihint').innerHTML=LIVE?`Fuente en vivo: ${API}/api/public (refresco 1s)`:
+ 'Modo snapshot. Para forzar otra URL: <code>?api=https://OTRO.code.run</code>';
 tick();setInterval(tick,INTERVAL);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 </script>
