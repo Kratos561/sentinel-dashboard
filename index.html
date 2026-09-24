@@ -196,7 +196,7 @@ function render(d){
   c+=card('P&L US$',fmt(a.pnl_total),cls(a.pnl_total));
   c+=card('P&L %',fmt(a.pnl_total_pct,2)+'%',cls(a.pnl_total_pct));
   c+=card('Max DD',fmt(a.max_dd_pct,2)+'%',a.max_dd_pct>2?'warnc':'');
-  c+=card('Trades hoy',(r.trades_today??0)+' / '+lim);
+  c+=card('Trades hoy',(r.trades_today??0));
   c+=card('P&L día',fmt(r.daily_pnl,3)+'%',cls(r.daily_pnl));
   c+=card('Ciclos',d.cycles??0);
   c+=card('Errores dato',d.data_errors??0,(d.data_errors?'warnc':''));
