@@ -78,9 +78,10 @@ a{color:var(--blue)}
 <script>
 const qs=new URLSearchParams(location.search);
 const DEFAULT_API="https://p01--sentinel-0--blnvcmgxk6zh.code.run";
+const BAD=/XXXX|TU-SERVICIO|OTRO\.code|example/i;   // jamás usar placeholders guardados
 const CANDS=[...(new Set([qs.get('api'),localStorage.getItem('sentinel_api'),DEFAULT_API]
-  .filter(Boolean)))].map(u=>u.replace(/\/$/,''));
-let ci=0, API=CANDS[ci], LIVE=API.startsWith('http'), fails=0;
+  .filter(u=>u&&!BAD.test(u))))].map(u=>u.replace(/\/$/,''));
+let ci=0, API=CANDS[ci]||'', LIVE=API.startsWith('http'), fails=0, rounds=0;
 if(qs.get('api'))localStorage.setItem('sentinel_api',qs.get('api'));
 const INTERVAL=()=>LIVE?1000:5000;
 let lastOk=0, lastData=null;
@@ -154,7 +155,11 @@ async function tick(){
   }catch(e){
     fails++;
     if(fails>=3 && CANDS.length>1){          // self-heal: rota a la proxima URL
-      ci=(ci+1)%CANDS.length; API=CANDS[ci]; LIVE=API.startsWith('http'); fails=0;
+      ci=(ci+1)%CANDS.length; rounds++;
+      if(rounds>=CANDS.length*2){            // dio dos vueltas sin exito -> snapshot
+        LIVE=false; API='';
+      } else { API=CANDS[ci]; LIVE=API.startsWith('http'); }
+      fails=0;
     }
     const age=(Date.now()-lastOk)/1000;
     $('srctxt').textContent=LIVE?'API caída · reintentando':'sin datos';
