@@ -173,28 +173,6 @@ button,input,select{font-family:inherit}
 .legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--tx-2)}
 .legend i{width:11px;height:11px;border-radius:4px;display:inline-block}
 
-/* ============================ PROMO CARD ============================ */
-.promo{position:relative;border-radius:var(--r-xl);overflow:hidden;min-height:214px;padding:22px;
-  background:
-    radial-gradient(120% 90% at 100% 0%, rgba(245,145,59,.55), transparent 55%),
-    radial-gradient(90% 80% at 0% 100%, rgba(245,145,59,.22), transparent 60%),
-    linear-gradient(160deg,#1a1009,#0e0906 70%);
-  border:1px solid var(--border-2);box-shadow:var(--sh-card);display:flex;flex-direction:column;justify-content:space-between}
-.promo:before{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;
-  background:radial-gradient(circle,rgba(245,145,59,.35),transparent 65%);filter:blur(6px)}
-.promo h3{margin:0;font-size:23px;line-height:1.18;font-weight:800;letter-spacing:-.4px;max-width:80%;
-  position:relative}
-.promo p{margin:10px 0 16px;font-size:12.5px;color:var(--tx-2);max-width:82%;position:relative}
-.avatars{display:flex;align-items:center;position:relative}
-.avatars .a{width:32px;height:32px;border-radius:50%;border:2px solid #150d07;display:grid;place-items:center;
-  font-size:11px;font-weight:800;margin-left:-9px;color:#150d07}
-.avatars .a:first-child{margin-left:0}
-.avatars .a.plus{background:var(--surface-elev);color:var(--accent-2);border-color:#150d07}
-.cta-white{position:relative;align-self:flex-start;background:#fdf6ee;color:#241a12;border:none;
-  border-radius:12px;padding:11px 26px;font-size:13.5px;font-weight:800;cursor:pointer;transition:var(--t);
-  text-decoration:none;display:inline-block}
-.cta-white:hover{transform:translateY(-1px);box-shadow:0 10px 24px -10px rgba(0,0,0,.7)}
-
 /* ===== FLUJO DE DATOS DE MERCADO (pulse) ===== */
 .live{display:inline-flex;align-items:center;gap:6px;font-weight:700}
 .live .pd{width:7px;height:7px;border-radius:50%;background:var(--mut-2)}
@@ -688,12 +666,6 @@ function render(d){
       <b>$${nf((ctx[s]||{}).price)}</b><div class="mut" style="margin-top:4px">sin posición</div></div>`).join('')
     : '<div class="empty">sin posiciones abiertas</div>';
   $('miniCards').innerHTML=mini;
-
-  // promo avatars (activos)
-  const syms=(st.symbols&&st.symbols.length)?st.symbols:Object.keys(ctx);
-  $('promoAv').innerHTML=(syms.length?syms:['BTCUSDT','ETHUSDT','SOLUSDT','XRPUSDT'])
-    .slice(0,4).map(s=>`<span class="a" style="background:${col(s)}">${SYM(s).slice(0,1)}</span>`).join('')
-    +'<span class="a plus">+</span>';
 
   // exposure bars
   renderBars(pos,me);
