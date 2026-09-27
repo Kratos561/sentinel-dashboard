@@ -760,7 +760,7 @@ function render(d){
     const age=t.age_s!=null?(' · dato hace '+fmtAge(t.age_s)):'';
     return `<div class="poscard"><div class="row"><span><b>${SYM(p.symbol)}</b> <span class="pill ${p.side==='LONG'?'cBUY':'cSELL'}">${p.side}</span> <span class="mut">$${nf(p.qty)}</span></span>
       <b class="${cls(u)}">${fmt(u,3)}%</b></div>
-      <div class="mut" style="margin-top:7px">entrada ${p.entry} → ${nf(px)}${age} · SL ${p.sl} (−${p.sl_pct}%) · ${p.tp_pct>=99?'sin TP':'TP '+p.tp} · edad ${fmt(p.age_min,1)}m · MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</div></div>`;
+      <div class="mut" style="margin-top:7px">entrada ${p.entry} → ${nf(px)}${age} · ${(p.trail_pct||0)>0?('stop trailing '+p.trail_pct+'% (actual '+p.sl+')'):('SL '+p.sl+' (−'+p.sl_pct+'%)')} · ${p.tp_pct>=99?'sin TP fijo':('TP '+p.tp)} · edad ${fmt(p.age_min,1)}m · MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</div></div>`;
   }).join(''):'<div class="empty">sin posición abierta — Lun–Vie 09:00 NY se evalúa cada activo.</div>';
 
   // ---- Trades
