@@ -621,8 +621,9 @@ function drawChart(curve){
   $('yax').innerHTML=[0,1,2,3,4].map(k=>{const v=mx-(k*(mx-mn)/4);return `<span>${kf(v)}</span>`}).join('');
   // eje X
   const f=pts[0].t, l=pts[pts.length-1].t, M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const labels=[]; const n=5;
-  for(let k=0;k<n;k++){const t=(f!=null&&l!=null)?f+(l-f)*k/(n-1):null;labels.push(t?M[new Date(t*1000).getMonth()]:'·');}
+  const short=(f!=null&&l!=null)&&(l-f)<45*86400; const labels=[]; const n=5;
+  for(let k=0;k<n;k++){const t=(f!=null&&l!=null)?f+(l-f)*k/(n-1):null;
+    labels.push(t?(short?new Date(t*1000).toLocaleDateString('es-ES',{day:'2-digit',month:'short'}):M[new Date(t*1000).getMonth()]):'·');}
   $('xax').innerHTML=labels.map(x=>`<span>${x}</span>`).join('');
   // tooltip
   const wrap=$('chart').parentElement;
@@ -651,7 +652,7 @@ function render(d){
   chg.className='bal-chg '+cls(pv);
   chg.querySelector('span').textContent=fmt(pv,2)+'%'+(a.pnl_total!==undefined?`  (${pv>=0?'+':''}$${nf(a.pnl_total)})`:'');
   chg.querySelector('svg').style.transform=pv<0?'rotate(90deg)':'none';
-  $('pnlReal').textContent='$'+nf(a.equity-a.start);
+  $('pnlReal').textContent=(a.equity-a.start<0?'-':'')+'$'+nf(Math.abs(a.equity-a.start));
   $('maxdd').textContent=fmt(a.max_dd_pct,2)+'%';
   drawChart(d.equity_curve);
 
