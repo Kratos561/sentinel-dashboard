@@ -422,6 +422,7 @@ code{background:var(--surface-elev);border:1px solid var(--border);border-radius
           </div>
           <div class="bal-foot">
             <div class="metric"><div class="k">P&L realizado</div><b id="pnlReal">$—</b></div>
+            <div class="metric"><div class="k">No-realizado <span id="unrealAge" class="mut"></span></div><b id="pnlUnreal">$—</b></div>
             <div class="metric"><div class="k">Máx. drawdown</div><b class="warnc" id="maxdd">—%</b></div>
             <div class="legend">
               <span><i style="background:linear-gradient(140deg,#f7a24f,#c9661c)"></i>Balance</span>
@@ -562,6 +563,7 @@ const $=id=>document.getElementById(id);
 const nf=n=>n===null||n===undefined||isNaN(n)?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 const fmt=(n,d=2)=>n===null||n===undefined||isNaN(n)?'—':Number(n).toFixed(d);
 const kf=v=>v===null||v===undefined||isNaN(v)?'—':(Math.abs(v)>=1000?'$'+(v/1000).toFixed(Math.abs(v)>=10000?0:1)+'k':'$'+nf(v));
+const r2=x=>Math.round((x||0)*100)/100;
 const cls=v=>v>0?'up':(v<0?'dn':'');
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const TICK={BTCUSDT:'#f7931a',ETHUSDT:'#8a92b2',SOLUSDT:'#9945ff',XRPUSDT:'#3aa0e0',PAXGUSDT:'#d4b06a',XAUUSD:'#d4b06a'};
@@ -580,11 +582,13 @@ const card=(k,v,c,sub)=>`<div class="stat"><div class="k">${k}</div><div class="
 function matches(s){return !filter||String(s||'').toLowerCase().includes(filter)}
 
 /* ============================ CHART ============================ */
-function drawChart(curve){
+function drawChart(curve, liveTotal){
   const el=$('chart');
-  if(!curve||curve.length<2){el.innerHTML='<div class="empty" style="padding:40px 0;text-align:center">Sin historial de equity todavía<br><span class="mut">el gráfico se dibuja cuando haya trades cerrados</span></div>';
+  let arr=curve||[];
+  if(liveTotal!=null&&arr.length)arr=arr.concat([{t:Date.now()/1000,e:liveTotal}]);
+  if(!arr||arr.length<2){el.innerHTML='<div class="empty" style="padding:40px 0;text-align:center">Sin historial de equity todavía<br><span class="mut">el gráfico se dibuja cuando haya trades cerrados</span></div>';
     $('yax').innerHTML='';$('xax').innerHTML='';return;}
-  const pts=curve.slice(-420);
+  const pts=arr.slice(-420);
   const W=680,H=216,PL=6,PR=54,PT=14,PB=22;
   const ys=pts.map(p=>p.e), mn=Math.min(...ys), mx=Math.max(...ys), sp=(mx-mn)||Math.max(1,mx*0.01);
   const X=i=>PL+i*(W-PL-PR)/(pts.length-1);
@@ -635,26 +639,37 @@ function drawChart(curve){
 function render(d){
   lastData=d;lastOk=Date.now();
   const a=d.equity||{}, r=d.risk||{}, st=d.strategy||{}, me=d.metrics||{}, cal=d.calibration||{}, ctx=d.context||{};
+  const dec=d.decisions||{}, pos=d.positions||[], lp=((d.providers||{}).prices)||{};
 
   // topbar
   $('pfSub').textContent='@jev · '+(d.provider||'paper');
   $('acctKind').textContent=(st.session||'')+(d.mode==='24/7'?' · 24/7':' · ventana');
   $('ccMode').textContent=d.mode==='24/7'?'24/7':(st.session||'ventana');
 
-  // balance
-  $('balance').textContent='$'+nf(a.total);
-  const chg=$('balanceChg'),pv=a.pnl_total_pct;
+  // balance (marcado a mercado con los precios en vivo del pulso)
+  let unreal=0, fresh=null;
+  pos.forEach(p=>{const t=lp[p.symbol]||{};
+    const px=t.price||((dec[p.symbol]||{}).price)||p.entry;
+    const u=p.side==='LONG'?(px-p.entry)/p.entry*100:(p.entry-px)/p.entry*100;
+    unreal+=(p.qty||0)*u/100;
+    if(t.age_s!=null&&(fresh===null||t.age_s<fresh))fresh=t.age_s;});
+  const totalLive=r2((a.total||0)+unreal);
+  const livePct=a.start?r2((totalLive/a.start-1)*100):(a.pnl_total_pct||0);
+  $('balance').textContent='$'+nf(totalLive);
+  const chg=$('balanceChg'),pv=livePct;
   chg.className='bal-chg '+cls(pv);
-  chg.querySelector('span').textContent=fmt(pv,2)+'%'+(a.pnl_total!==undefined?`  (${pv>=0?'+':''}$${nf(a.pnl_total)})`:'');
+  chg.querySelector('span').textContent=fmt(pv,2)+'%'+(a.start?`  (${(totalLive-a.start)>=0?'+':''}$${nf(r2(totalLive-a.start))})`:'');
   chg.querySelector('svg').style.transform=pv<0?'rotate(90deg)':'none';
   $('pnlReal').textContent=(a.equity-a.start<0?'-':'')+'$'+nf(Math.abs(a.equity-a.start));
+  $('pnlUnreal').textContent=(unreal<0?'-':'+')+'$'+nf(Math.abs(unreal));
+  $('pnlUnreal').className=cls(unreal);
+  $('unrealAge').textContent=(pos.length&&fresh!=null)?('· hace '+fmtAge(fresh)):'';
   $('maxdd').textContent=fmt(a.max_dd_pct,2)+'%';
-  drawChart(d.equity_curve);
+  drawChart(d.equity_curve, totalLive);
 
   // right card
-  $('ccBal').textContent='$'+nf(a.total);
+  $('ccBal').textContent='$'+nf(totalLive);
   const b=$('ccBadge');b.textContent=(pv>=0?'↑ ':'↓ ')+fmt(Math.abs(pv),2)+'%';b.className='cc-badge '+cls(pv);
-  const pos=d.positions||[];
   $('ncards').textContent=pos.length; $('nmax').textContent=st.max_concurrent??5;
   $('capChip').textContent='cap '+(st.cluster_cap_pct??30)+'% crypto';
 
@@ -682,7 +697,7 @@ function render(d){
   }).join(''):'<div class="empty">Sin trades aún — Jev decide abstenerse hasta tener ventaja clara.</div>';
 
   // ---- Ciclo Jev (state / decision)
-  const dec=d.decisions||{}; const sy=Object.keys(dec).filter(matches);
+  const sy=Object.keys(dec).filter(matches);
   if(sy.length){ if(!sel||!dec[sel]) sel=sy[0];
     $('tabs').innerHTML=sy.map(s=>`<button class="tab ${s===sel?'on':''}" onclick="pick('${s}')">${SYM(s)}</button>`).join('');
   } else {$('tabs').innerHTML='';}
@@ -740,11 +755,12 @@ function render(d){
 
   // ---- Posiciones
   $('positionsBox').innerHTML=pos.length?pos.map(p=>{
-    const dd=dec[p.symbol]||{}; const px=dd.price||p.entry;
+    const t=lp[p.symbol]||{}; const dd=dec[p.symbol]||{}; const px=t.price||dd.price||p.entry;
     const u=(p.side==='LONG'?(px-p.entry)/p.entry*100:(p.entry-px)/p.entry*100);
+    const age=t.age_s!=null?(' · dato hace '+fmtAge(t.age_s)):'';
     return `<div class="poscard"><div class="row"><span><b>${SYM(p.symbol)}</b> <span class="pill ${p.side==='LONG'?'cBUY':'cSELL'}">${p.side}</span> <span class="mut">$${nf(p.qty)}</span></span>
       <b class="${cls(u)}">${fmt(u,3)}%</b></div>
-      <div class="mut" style="margin-top:7px">entrada ${p.entry} · SL ${p.sl} (−${p.sl_pct}%) · ${p.tp_pct>=99?'sin TP':'TP '+p.tp} · edad ${fmt(p.age_min,1)}m · MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</div></div>`;
+      <div class="mut" style="margin-top:7px">entrada ${p.entry} → ${nf(px)}${age} · SL ${p.sl} (−${p.sl_pct}%) · ${p.tp_pct>=99?'sin TP':'TP '+p.tp} · edad ${fmt(p.age_min,1)}m · MFE ${fmt(p.mfe_pct,3)}% · MAE ${fmt(p.mae_pct,3)}%</div></div>`;
   }).join(''):'<div class="empty">sin posición abierta — Lun–Vie 09:00 NY se evalúa cada activo.</div>';
 
   // ---- Trades
