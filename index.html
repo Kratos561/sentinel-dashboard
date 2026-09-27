@@ -661,7 +661,7 @@ function render(d){
   chg.querySelector('span').textContent=fmt(pv,2)+'%'+(a.start?`  (${(totalLive-a.start)>=0?'+':''}$${nf(r2(totalLive-a.start))})`:'');
   chg.querySelector('svg').style.transform=pv<0?'rotate(90deg)':'none';
   $('pnlReal').textContent=(a.equity-a.start<0?'-':'')+'$'+nf(Math.abs(a.equity-a.start));
-  $('pnlUnreal').textContent=(unreal<0?'-':'+')+'$'+nf(Math.abs(unreal));
+  $('pnlUnreal').textContent=(unreal<0?'-':'+')+'$'+Math.abs(unreal).toFixed(4);
   $('pnlUnreal').className=cls(unreal);
   $('unrealAge').textContent=(pos.length&&fresh!=null)?('· hace '+fmtAge(fresh)):'';
   $('maxdd').textContent=fmt(a.max_dd_pct,2)+'%';
