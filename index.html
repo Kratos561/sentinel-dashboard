@@ -195,6 +195,24 @@ button,input,select{font-family:inherit}
   text-decoration:none;display:inline-block}
 .cta-white:hover{transform:translateY(-1px);box-shadow:0 10px 24px -10px rgba(0,0,0,.7)}
 
+/* ===== FLUJO DE DATOS DE MERCADO (pulse) ===== */
+.live{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.live .pd{width:7px;height:7px;border-radius:50%;background:var(--mut-2)}
+.live.on{color:var(--success);background:var(--success-soft);border-color:transparent}
+.live.on .pd{background:var(--success);animation:lp 1.6s infinite}
+.live.off{color:var(--danger);background:var(--danger-soft);border-color:transparent}
+@keyframes lp{0%{box-shadow:0 0 0 0 rgba(95,208,138,.55)}70%{box-shadow:0 0 0 7px rgba(95,208,138,0)}100%{box-shadow:0 0 0 0 rgba(95,208,138,0)}}
+.flowcard{min-height:214px}
+.flow{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.flowrow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;transition:var(--t)}
+.flowrow:hover{background:var(--surface-2)}
+.fd{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--mut-2)}
+.fd.ok{background:var(--success);animation:lp 1.8s infinite}
+.fd.stale{background:var(--warn)} .fd.bad{background:var(--danger)} .fd.wait{background:var(--mut-2)}
+.flowrow .fn{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--tx)}
+.flowrow .fv{font-weight:500;color:var(--mut);font-size:11px}
+.flowrow .fa{font-size:11px;color:var(--mut-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+
 /* ============================ BAR CHART (exposure) ============================ */
 .barwrap{position:relative;margin-top:18px;height:172px}
 .barwrap .bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:10px}
@@ -435,16 +453,15 @@ code{background:var(--surface-elev);border:1px solid var(--border);border-radius
         </div>
 
         <div class="bottom-row">
-          <!-- promo / hero -->
-          <div class="promo">
-            <div>
-              <h3>Tendencia diaria,<br>ejecutada con disciplina</h3>
-              <p>Una decisión al día por activo · holds de semanas · stop de desastre · sin take-profit.</p>
+          <!-- flujo de datos de mercado (proveedores en vivo) -->
+          <div class="card flowcard" id="flowcard">
+            <div class="card-h">
+              <span class="t">Flujo de datos de mercado</span>
+              <span class="spacer" style="flex:1"></span>
+              <span class="chip live" id="flowLive"><span class="pd"></span>—</span>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative">
-              <div class="avatars" id="promoAv"></div>
-              <a class="cta-white" href="https://github.com/Kratos561/sentinel-0" target="_blank" rel="noopener">Repositorio</a>
-            </div>
+            <div class="flow" id="flow"><div class="mut" style="padding:6px 0">esperando el primer pulso…</div></div>
+            <div class="mut" id="flowFoot" style="margin-top:10px;font-size:11px">muestreo de proveedores en vivo</div>
           </div>
           <!-- exposure / investments -->
           <div class="card">
@@ -680,6 +697,8 @@ function render(d){
 
   // exposure bars
   renderBars(pos,me);
+  // flujo de datos de mercado
+  renderProviders(d.providers);
 
   // transactions
   const tr=(d.trades||[]).slice().reverse().filter(t=>matches(t.sym||t.symbol)||matches(t.trade_id));
@@ -824,6 +843,31 @@ function renderBars(pos,me){
   $('expNote').textContent=metric==='exp'
     ?`${pos.length} posición(es) · ${keys.length} activos vigilados · tope cluster crypto ${(lastData&&lastData.strategy?lastData.strategy.cluster_cap_pct:30)}%`
     :'P&L no-realizado por activo (mide el drawdown de cada apuesta)';
+}
+
+/* ============================ DATA FLOW (providers) ============================ */
+function fmtAge(s){s=Math.max(0,s||0);if(s<60)return Math.round(s)+'s';if(s<3600)return Math.round(s/60)+'m';return Math.round(s/3600)+'h';}
+function renderProviders(p){
+  p=p||{};
+  const srcs=p.sources||[], iv=p.interval_s||30;
+  const fresh=(p.last_tick_s!=null)&&(p.last_tick_s<=iv*2.5);
+  const live=$('flowLive');
+  live.className='chip live '+(fresh?'on':'off');
+  live.innerHTML='<span class="pd"></span>'+(fresh?'EN VIVO':'DETENIDO');
+  const nm={binance_price:'Binance · precio',binance_depth:'Binance · order book',
+            fear_greed:'Fear & Greed',okx_derivs:'OKX · funding/OI',cross_exchange:'Coinbase · cross-exch'};
+  $('flow').innerHTML=srcs.length?srcs.map(s=>{
+    let cls='wait';
+    if(s.ok===true) cls=(s.age_s!=null&&s.age_s<=iv*2.5)?'ok':'stale';
+    else if(s.ok===false) cls='bad';
+    const age=s.age_s!=null?('hace '+fmtAge(s.age_s)):'—';
+    const lat=s.latency_ms!=null?(' · '+s.latency_ms+'ms'):'';
+    return '<div class="flowrow"><span class="fd '+cls+'"></span>'+
+      '<span class="fn">'+(nm[s.name]||s.name)+'<span class="fv"> '+(s.detail||'')+'</span></span>'+
+      '<span class="fa">'+age+lat+'</span></div>';
+  }).join(''):'<div class="mut" style="padding:6px 0">esperando el primer pulso…</div>';
+  $('flowFoot').textContent='Muestreo cada '+iv+'s · '+(p.ticks||0)+' ciclos · último pulso '+
+    (p.last_tick_s!=null?('hace '+fmtAge(p.last_tick_s)):'—');
 }
 
 /* ============================ EVENTS ============================ */
