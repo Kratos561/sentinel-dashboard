@@ -744,7 +744,7 @@ function render(d){
     card('Calibración (Brier 5d)',brier===null||brier===undefined?'—':fmt(brier,3),'',
          brier===null||brier===undefined?'sin decisiones evaluadas aún':(brier<0.25?'mejor que azar':'peor que azar')),
     card('Decisiones evaluadas',ne),
-    card('Ciclos',me.cycles??d.cycles??0),
+    card('Ciclos',d.cycles??me.cycles??0),
     card('Errores de dato',me.data_errors??d.data_errors??0,(me.data_errors||d.data_errors)?'warnc':''),
     card('Latencia p50',me.lat_p50_ms?fmt(me.lat_p50_ms,0)+' ms':'—'),
     card('Latencia p95',me.lat_p95_ms?fmt(me.lat_p95_ms,0)+' ms':'—',(me.lat_p95_ms>8000?'warnc':'')),
