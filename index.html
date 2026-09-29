@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#62272D">
 <title>SENTINEL 0 · JEV</title>
+<!-- Fuentes autoalojadas (OFL 1.1) — sin CDN en runtime (§2.3) -->
+<style>
+@font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/Poppins-400.woff2) format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:swap;src:url(assets/fonts/Poppins-500.woff2) format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/Poppins-600.woff2) format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/Poppins-700.woff2) format('woff2')}
+@font-face{font-family:'InterVar';font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/Inter-var.woff2) format('woff2')}
+</style>
+<script type="importmap">{"imports":{"three":"./assets/vendor/three/three.module.js"}}</script>
 <style>
 /* ================= TOKENS (§6.1) ================= */
 :root{
@@ -20,6 +29,7 @@
   --sh-shell:0 60px 90px -40px rgba(80,20,30,.45), 0 30px 50px -30px rgba(80,20,30,.35);
   --sh-card:0 18px 40px -22px rgba(0,0,0,.6); --sh-tilt:0 34px 60px -20px rgba(0,0,0,.75);
   --font:'Poppins',system-ui,'Segoe UI',Roboto,sans-serif;
+  --font-num:'InterVar',ui-monospace,'Cascadia Code',monospace;
   --mono:ui-monospace,'Cascadia Code',Consolas,monospace;
 }
 html[data-frame="dark"]{--page-bg:#1E0B0E}
@@ -208,7 +218,14 @@ a{color:inherit}
 .tip small{display:block;color:#8a6a6a;font-weight:600;font-size:10.5px}
 .tip:after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#FFF4F9;border-radius:2px}
 
-/* ================= VISTAS ================= */
+/* cifras con fuente tabular (D4) */
+.hero .px,.blob .in .v,.blob .in .c,.trio .t .v,.dlbar .big,.lcard b,
+th,td,.chipS,.statc .v,.mini{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum','zero'}
+
+/* canvas 3D del hero (mejora progresiva; fallback = emblema SVG) */
+.hero canvas.emblem3d{position:absolute;right:-6px;bottom:-26px;width:190px;height:190px;z-index:1;display:none;pointer-events:auto;cursor:grab}
+.hero canvas.emblem3d.ready{display:block}
+.hero canvas.emblem3d:active{cursor:grabbing}
 h2.sec{font-size:19px;font-weight:700;margin:2px 0 0;display:flex;align-items:center;gap:10px}
 h2.sec .n{font-size:11px;color:var(--tx-3);font-weight:600;background:var(--surface-0);padding:2px 9px;border-radius:var(--r-pill)}
 .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:13px}
@@ -296,6 +313,7 @@ details summary{cursor:pointer;color:var(--tx-3);font-size:11.5px;margin-top:10p
       <div class="rgrid">
         <div class="hero" id="hero">
           <div class="emblem"><img src="assets/img/emblem.svg" alt=""></div>
+          <canvas class="emblem3d" id="hero3d" aria-hidden="true"></canvas>
           <div class="hero-in">
             <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
               <span class="pill popular" id="hBadge">—</span><span class="pill src">B</span><span class="pill src">O</span>
@@ -608,6 +626,42 @@ route();tick();setInterval(tick,1000);
 setInterval(()=>{if(!lastData)return;const h=(location.hash||'').replace('#','');if(h&&h!=='top')return;
   const syms=((lastData.strategy||{}).symbols)||[];if(syms.length){rotI++;sel=syms[rotI%syms.length];render(lastData);}},8000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
+</script>
+<script type="module">
+/* Hero 3D: cristal CC0 (Quaternius via Poly Pizza) teñido granate con luz coral.
+   Carga perezosa (IntersectionObserver), pixel-ratio acotado y fallback al emblema SVG. */
+const hero=document.getElementById('hero'),cvs=document.getElementById('hero3d');
+function boot3D(){
+  if(!hero||!cvs||cvs.dataset.on)return; cvs.dataset.on='1';
+  import('three').then(async(THREE)=>{
+    const {GLTFLoader}=await import('./assets/vendor/three/GLTFLoader.js');
+    const r=new THREE.WebGLRenderer({canvas:cvs,alpha:true,antialias:true,powerPreference:'low-power'});
+    r.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+    const sc=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(38,1,0.1,100); cam.position.set(0,0,4.2);
+    sc.add(new THREE.AmbientLight(0xffffff,0.5));
+    const key=new THREE.DirectionalLight(0xE98A7E,2.2); key.position.set(2,3,3); sc.add(key);
+    const rim=new THREE.DirectionalLight(0x9780DA,1.4); rim.position.set(-3,-1,-2); sc.add(rim);
+    new GLTFLoader().load('assets/models/crystal-big.glb',(g)=>{
+      let box=new THREE.Box3().setFromObject(g.scene),sz=new THREE.Vector3(); box.getSize(sz);
+      const k=2.6/Math.max(sz.x,sz.y,sz.z); g.scene.scale.setScalar(k);
+      box.setFromObject(g.scene); const ctr=new THREE.Vector3(); box.getCenter(ctr); g.scene.position.sub(ctr);
+      g.scene.traverse(o=>{if(o.isMesh){o.material.color.set(0x8A3A44);o.material.metalness=0.5;o.material.roughness=0.18;o.material.envMapIntensity=1.2;}});
+      sc.add(g.scene);
+      let rx=0,ry=0,drag=false,px=0,py=0;
+      cvs.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;});
+      addEventListener('pointerup',()=>drag=false);
+      addEventListener('pointermove',e=>{if(!drag)return;ry+=(e.clientX-px)*0.01;rx+=(e.clientY-py)*0.01;px=e.clientX;py=e.clientY;});
+      const fit=()=>{const w=cvs.clientWidth||190;cvs.width=w*devicePixelRatio;cvs.height=w*devicePixelRatio;r.setSize(w,w,false);cam.aspect=1;cam.updateProjectionMatrix();};
+      fit(); addEventListener('resize',fit);
+      const hide=hero.querySelector('.emblem'); if(hide)hide.style.display='none';
+      cvs.classList.add('ready');
+      let t0=performance.now();
+      (function loop(t){requestAnimationFrame(loop);const dt=(t-t0)/1000;t0=t;if(!drag)ry+=dt*0.5;g.scene.rotation.y=ry;g.scene.rotation.x=rx*0.6;r.render(sc,cam);})(t0);
+    },undefined,()=>{/* error: deja el SVG */});
+  }).catch(()=>{/* sin WebGL/three: fallback SVG */});
+}
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.disconnect();boot3D();}}),{rootMargin:'250px'});io.observe(hero);}else{window.addEventListener('load',boot3D,{once:true});}
 </script>
 </body>
 </html>
