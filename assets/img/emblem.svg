@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Sentinel 0">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7F3436"/>
+      <stop offset="1" stop-color="#3A1920"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E98A7E"/>
+      <stop offset="0.5" stop-color="#C84346"/>
+      <stop offset="1" stop-color="#9780DA"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.32" cy="0.24" r="0.85">
+      <stop offset="0" stop-color="#E98A7E" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#E98A7E" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="120" cy="120" r="104" fill="url(#glow)"/>
+
+  <!-- anillo exterior con luz de borde coral->violeta -->
+  <circle cx="120" cy="120" r="92" fill="none" stroke="url(#edge)" stroke-width="7" filter="url(#soft)"/>
+  <circle cx="120" cy="120" r="92" fill="none" stroke="url(#edge)" stroke-width="4" opacity="0.9"/>
+
+  <!-- disco -->
+  <circle cx="120" cy="120" r="78" fill="url(#face)" stroke="#62272D" stroke-width="2"/>
+
+  <!-- emblema: escudo de centinela -->
+  <path d="M120 58 L176 82 V126 C176 158 152 178 120 190 C88 178 64 158 64 126 V82 Z"
+        fill="#351518" stroke="#C84346" stroke-width="4" stroke-linejoin="round"/>
+  <!-- signal interior (tres barras, tipo radar) -->
+  <g stroke="#FFF4F9" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.95">
+    <path d="M96 120 H144"/>
+    <path d="M104 104 H136"/>
+    <path d="M112 88 H128"/>
+  </g>
+  <circle cx="120" cy="136" r="7" fill="#E0474C"/>
+
+  <!-- marcas de estado -->
+  <circle cx="42" cy="120" r="6" fill="#5FD08A"/>
+  <circle cx="198" cy="120" r="6" fill="#C83234"/>
+</svg>
