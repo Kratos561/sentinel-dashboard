@@ -353,21 +353,31 @@ body{
 .ctip em.pos{color:var(--pos-text)}
 .ctip em.neg{color:var(--neg-text)}
 
-/* panel de calibracion */
+/* panel de calibracion
+   Antes ocupaba una franja de 1386x88px (ratio 16:1) para un unico texto de
+   estado vacio. Ahora es una fila de celdas que llena el ancho: cuando no hay
+   resultados maduros explica el POR QUE y muestra los horizontes como pistas. */
 .calib{grid-area:calib;align-self:start}
-.calib-body{padding:0 2px}
-.calib-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-  padding:7px 0;border-top:1px solid var(--line)}
-.calib-row:first-child{border-top:0}
-.calib-row .k{font-size:var(--t-small);color:var(--fg-muted)}
-.calib-row .v{font-family:var(--font-num);font-size:var(--t-md);font-weight:600;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.calib-note{font-size:var(--t-small);color:var(--fg-faint);line-height:1.5;margin-top:9px;
-  padding-top:9px;border-top:1px solid var(--line)}
-.calib-note b{color:var(--fg-dim);font-weight:600}
-/* barra de 0 a 1 para el Brier: mas bajo es mejor, asi que se invierte */
+.calib-body{padding:2px 2px 0}
+.calib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border-radius:var(--r-sm);overflow:hidden}
+.calib-cell{background:var(--bg-panel);padding:10px 12px;display:flex;
+  flex-direction:column;gap:3px;min-width:0}
+.calib-cell .k{font-size:var(--t-micro);color:var(--fg-muted);letter-spacing:.3px;
+  text-transform:uppercase;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.calib-cell .v{font-family:var(--font-num);font-size:var(--t-lg);font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.calib-cell .sub{font-size:var(--t-micro);color:var(--fg-faint);line-height:1.35}
+.calib-cell[data-state="pos"] .v{color:var(--pos-text)}
+.calib-cell[data-state="neg"] .v{color:var(--neg-text)}
+.calib-cell[data-state="warn"] .v{color:var(--warn-text)}
+.calib-note{font-size:var(--t-small);color:var(--fg-muted);line-height:1.5;
+  margin-top:11px;padding-top:11px;border-top:1px solid var(--line);max-width:78ch}
+.calib-note b{color:var(--fg);font-weight:600}
+/* barra 0..1 del Brier: mas bajo es mejor, asi que la escala se invierte */
 .bar{height:5px;background:var(--bg-inset);border-radius:var(--r-pill);
-  overflow:hidden;margin-top:5px;width:74px;flex:0 0 auto}
+  overflow:hidden;margin-top:6px;width:100%}
 .bar i{display:block;height:100%;border-radius:var(--r-pill)}
 
 /* detalle */
@@ -417,7 +427,17 @@ details summary{cursor:pointer;color:var(--fg-faint);font-size:var(--t-small);ma
 #foot{width:100%;max-width:1500px;margin:0 auto;padding:2px 18px 26px;font-size:var(--t-small);color:var(--fg-faint);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 #foot code{font-family:var(--font-num);background:var(--bg-raised);border:1px solid var(--line);padding:2px 6px;border-radius:var(--r-xs)}
 </style>
-<script type="importmap">{"imports":{"three":"./assets/vendor/three/three.module.js"}}</script>
+<!-- import map: resuelve el especificador desnudo 'three' que usan tanto
+     three.module.js como GLTFLoader.js y BufferGeometryUtils.js. Antes solo
+     estaba mapeado 'three', pero GLTFLoader importaba '../utils/
+     BufferGeometryUtils.js', archivo que NO estaba en el repo: el cristal 3D
+     fallaba al cargar y caia al fallback SVG sin que se notara. -->
+<script type="importmap">
+{"imports":{
+  "three":"./assets/vendor/three/three.module.js",
+  "three/":"./assets/vendor/three/"
+}}
+</script>
 </head>
 <body>
 <div class="shell">
@@ -735,17 +755,32 @@ function render(d){
   const bk=Object.keys(buckets);
   const caliOk=(cali.brier!=null&&cali.brier<=0.311);
   $('calibSub').textContent=nEval?('medido sobre '+nEval+' resultado'+(nEval===1?'':'s')):'acumulando muestras';
+
+  const cell=(k,v,sub,state,bar)=>`<div class="calib-cell"${state?` data-state="${state}"`:''}>`
+    +`<span class="k">${k}</span><span class="v">${v}</span>`
+    +(bar?`<span class="bar"><i style="width:${bar}%;background:var(--${state||'fg-faint'})"></i></span>`:'')
+    +(sub?`<span class="sub">${sub}</span>`:'')+'</div>';
+
   if(!nEval){
-    $('calibBody').innerHTML='<div class="empty">Sin resultados maduros todavía. Las decisiones se miden a 1, 5 y 20 días: el primer resultado llega tras el primer horizonte.</div>';
+    // sin resultados: mostrar el instrumentario en vez de una frase larga
+    $('calibBody').innerHTML=
+      '<div class="calib-grid">'
+      +cell('Brier score','—','sin muestras aún')
+      +cell('Tasa base','0.311','la referencia contra la que se compara')
+      +cell('Decisiones medidas','0','horizontes de 1, 5 y 20 días')
+      +cell('Estado','midiendo','el primer resultado llega tras el primer horizonte')
+      +'</div>'
+      +'<div class="calib-note">Las decisiones se evalúan a <b>1, 5 y 20 días</b>: hasta que un horizonte madura no hay resultado contra el que medir la probabilidad que declara Jev. Mientras tanto el número no se inventa.</div>';
   }else{
     const br=Number(cali.brier);
     const inv=(1-Math.min(1,br/0.6))*100;
     $('calibBody').innerHTML=
-      '<div class="calib-row"><span class="k">Brier score</span>'
-      +'<span class="v '+(caliOk?'pos':'warn')+'">'+br.toFixed(3)
-      +'<span class="bar"><i style="width:'+inv.toFixed(0)+'%;background:var(--'+(caliOk?'pos':'warn')+')"></i></span></span></div>'
-      +'<div class="calib-row"><span class="k">Tasa base (referencia)</span><span class="v">0.311</span></div>'
-      +'<div class="calib-row"><span class="k">Buckets de execute</span><span class="v">'+bk.length+'</span></div>'
+      '<div class="calib-grid">'
+      +cell('Brier score',br.toFixed(3),caliOk?'mejor que la tasa base':'peor que la tasa base',caliOk?'pos':'warn',inv.toFixed(0))
+      +cell('Tasa base','0.311','sin referencia valida')
+      +cell('Buckets de execute',String(bk.length),'tramos con resultado medido')
+      +cell('Decisiones medidas',String(nEval),'resultados maduros')
+      +'</div>'
       +'<div class="calib-note">'+(caliOk
         ?'<b>Calibrado.</b> El "execute" de Jev ordena los resultados: se puede usar como umbral.'
         :'<b>Sin calibrar.</b> El "execute" no supera a la tasa base, así que el umbral 0.65 es heurístico, no probabilístico. El motor sigue siendo el que decide.')+'</div>';
