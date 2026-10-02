@@ -25,7 +25,7 @@
   /* datos */
   --p-mint-300:#7BE3B4; --p-mint-400:#34D399; --p-mint-500:#10B981;
   --p-rose-300:#FCA5A5; --p-rose-400:#F87171; --p-rose-500:#EF4444;
-  --p-amber-400:#FBBF24;
+  --p-amber-300:#FCD34D; --p-amber-400:#FBBF24; --p-amber-500:#F59E0B;
   /* texto */
   --p-snow-50:#F7FAFF; --p-snow-100:#E7EDF7; --p-snow-300:#B7C3D6;
   --p-snow-500:#7C8AA3; --p-snow-600:#5A6880;
@@ -65,6 +65,12 @@
   --neg-text:var(--p-rose-300);
   --neg-wash:color-mix(in srgb,var(--p-rose-500) 16%,transparent);
   --warn:var(--p-amber-400);
+  /* tercer estado semantico: ni ganancia ni perdida, sino "atencion".
+     El cobre de marca se reserva para accion; el ambar para advertencia.
+     --p-amber-300 y -500 NO existian: se referenciaban rotos y el token
+     caia a vacio (verificado en navegador). Se definen aqui. */
+  --warn-text:var(--p-amber-300);
+  --warn-wash:color-mix(in srgb,var(--p-amber-500) 16%,transparent);
   --cool:var(--p-violet-400);
 
   --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
@@ -88,6 +94,7 @@ html[data-theme="light"]{
   --accent-wash:#FBEFE2; --accent-glow:rgba(184,99,26,.28);
   --pos:#0F8A5F; --pos-text:#0B6E4B; --pos-wash:#E4F6EE;
   --neg:#C8372F; --neg-text:#A02B24; --neg-wash:#FCE9E7;
+  --warn:#B26A00; --warn-text:#8A5200; --warn-wash:#FDF1DC;
 }
 
 /* ---------- bases ---------- */
@@ -185,8 +192,8 @@ body{
 
 /* resumen: rejilla assimetrica deliberada (no tarjetas SaaS identicas) */
 .summary{display:grid;gap:14px;grid-template-columns:minmax(0,1.6fr) minmax(300px,.9fr);
-  grid-template-areas:"focus list" "assets equity" "feed feed";align-items:start}
-@media(max-width:1120px){.summary{grid-template-columns:1fr;grid-template-areas:"focus" "list" "assets" "equity" "feed"}}
+  grid-template-areas:"focus list" "assets equity" "calib calib" "feed feed";align-items:start}
+@media(max-width:1120px){.summary{grid-template-columns:1fr;grid-template-areas:"focus" "list" "assets" "equity" "calib" "feed"}}
 
 .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-1)}
 .panel-h{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line-soft)}
@@ -270,11 +277,22 @@ body{
 .chip.pos{background:var(--pos-wash);color:var(--pos-text);border-color:transparent}
 .chip.neg{background:var(--neg-wash);color:var(--neg-text);border-color:transparent}
 .chip.ok{background:var(--pos-wash);color:var(--pos-text);border-color:transparent}
+/* aviso: ni perdida ni ganancia, es una condicion que requiere atencion
+   (limite excedido, dato degradado). Un tercer estado, no un cuarto color. */
+.chip.warn{background:var(--warn-wash);color:var(--warn-text);border-color:transparent;font-weight:700}
+.eq-cell .v.warn{color:var(--warn-text)}
+/* solo para lectores de pantalla: el h1 existe pero no ocupa espacio */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* foco visible: sin esto la navegacion por teclado es invisible */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-xs)}
+/* el balance cambia cada segundo: se anuncia con moderacion para no saturar */
+.balance-num[aria-live]{transition:color .2s}
 
 /* feed (gráfico de balance) */
 .feed{grid-area:feed;align-items:start}
 .chartwrap{position:relative;background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--sh-1);align-self:start}
-.chartwrap svg{display:block;width:100%;height:118px}
+.chartwrap svg{display:block;width:100%;height:190px}
 .legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
 .legend span{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--fg-dim)}
 .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -282,6 +300,27 @@ body{
   border-radius:var(--r-sm);padding:6px 9px;font-family:var(--font-num);font-size:11.5px;font-weight:600;
   box-shadow:var(--sh-2);pointer-events:none;display:none;z-index:5;white-space:nowrap}
 .ctip small{display:block;color:var(--fg-faint);font-weight:500;font-size:10px}
+/* variacion respecto al capital inicial: se muestra con signo, nunca solo color */
+.ctip em{display:block;font-style:normal;font-size:10.5px;margin-top:1px}
+.ctip em.pos{color:var(--pos-text)}
+.ctip em.neg{color:var(--neg-text)}
+
+/* panel de calibracion */
+.calib{grid-area:calib;align-self:start}
+.calib-body{padding:0 2px}
+.calib-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:7px 0;border-top:1px solid var(--line)}
+.calib-row:first-child{border-top:0}
+.calib-row .k{font-size:11.5px;color:var(--fg-muted)}
+.calib-row .v{font-family:var(--font-num);font-size:13.5px;font-weight:600;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.calib-note{font-size:11px;color:var(--fg-faint);line-height:1.5;margin-top:9px;
+  padding-top:9px;border-top:1px solid var(--line)}
+.calib-note b{color:var(--fg-dim);font-weight:600}
+/* barra de 0 a 1 para el Brier: mas bajo es mejor, asi que se invierte */
+.bar{height:5px;background:var(--bg-inset);border-radius:var(--r-pill);
+  overflow:hidden;margin-top:5px;width:74px;flex:0 0 auto}
+.bar i{display:block;height:100%;border-radius:var(--r-pill)}
 
 /* detalle */
 h2.sec{font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px}
@@ -336,9 +375,12 @@ details summary{cursor:pointer;color:var(--fg-faint);font-size:11.5px;margin-top
 <div class="shell">
   <header class="top">
     <div class="brandmark">
-      <span class="glyph"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 7.5v9M8 10l8 4"/></svg></span>
+      <span class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 7.5v9M8 10l8 4"/></svg></span>
       <span class="txt"><b>SENTINEL 0</b><span id="greetSub">mesa de operaciones</span></span>
     </div>
+    <!-- h1 real, visualmente oculto. Antes el documento tenia 7 h2 y ningun h1,
+         lo que deja a un lector de pantalla sin punto de entrada (WCAG 2.1). -->
+    <h1 class="sr-only">SENTINEL 0 — mesa de operaciones de trading</h1>
     <label class="search">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
       <input id="q" type="search" placeholder="Buscar activo, trade, ciclo…" aria-label="Buscar" autocomplete="off">
@@ -384,6 +426,19 @@ details summary{cursor:pointer;color:var(--fg-faint);font-size:11.5px;margin-top
 
         <div class="list" id="posList"></div>
 
+        <!-- Panel de calibracion: es el dato que mas dice si el modelo sirve y
+             estaba escondido en la vista Salud. Si execute NO esta calibrado,
+             el umbral 0.65 no significa nada, asi que va en el resumen y no
+             buried: el operador tiene que verlo sin abrir otra vista. -->
+        <div class="panel calib" id="calib">
+          <div class="panel-h">
+            <span class="t">Calibración de Jev</span><span class="s" id="calibSub">—</span>
+          </div>
+          <div class="calib-body" id="calibBody">
+            <div class="empty">Midiendo…</div>
+          </div>
+        </div>
+
         <div class="assets">
           <div class="panel-h" style="border:none;padding:0 0 8px">
             <span class="t">Activos vigilados</span><span class="s" id="assetsSub">—</span>
@@ -394,8 +449,8 @@ details summary{cursor:pointer;color:var(--fg-faint);font-size:11.5px;margin-top
         <div class="equity">
           <div>
             <div class="k" style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg-faint);font-weight:600">Balance total</div>
-            <div class="balance-num" id="balNum">$—</div>
-            <div class="balance-delta" id="balDelta">—</div>
+            <div class="balance-num" id="balNum" aria-live="polite" aria-atomic="true">$—</div>
+            <div class="balance-delta" id="balDelta" aria-live="polite">—</div>
           </div>
           <div class="eq-grid">
             <div class="eq-cell"><div class="k">Realizado</div><div class="v" id="eqReal">$—</div></div>
@@ -480,27 +535,56 @@ function chart(series,liveTotal){
   if(liveTotal!=null&&pts.length)pts=pts.concat([{t:Date.now()/1000,e:liveTotal}]);
   if(pts.length<2){el.innerHTML='<div class="empty" style="text-align:center">Sin historial todavía</div>';return;}
   const P=pts.slice(-400);
-  const W=680,H=150,pl=4,pr=4,pt=10,pb=14;
-  const ys=P.map(p=>p.e),mn=Math.min(...ys),mx=Math.max(...ys),sp=(mx-mn)||Math.max(.01,mx*.01);
-  const X=i=>pl+i*(W-pl-pr)/(P.length-1), Y=v=>pt+(1-(v-mn)/sp)*(H-pt-pb);
+  const W=680,H=190,pl=52,pr=12,pt=14,pb=22;
+  const ys=P.map(p=>p.e);
+  // la linea de capital inicial es la referencia que hace legible el grafico:
+  // sin ella no se ve si la curva esta por encima o por debajo de donde empezo.
+  const start=(lastData&&lastData.equity&&lastData.equity.start)||null;
+  let mn=Math.min(...ys),mx=Math.max(...ys);
+  if(start!=null){mn=Math.min(mn,start);mx=Math.max(mx,start);}
+  const pad=(mx-mn)*0.12||Math.max(.01,mx*.01);
+  mn-=pad;mx+=pad;
+  const X=i=>pl+i*(W-pl-pr)/(P.length-1), Y=v=>pt+(1-(v-mn)/(mx-mn))*(H-pt-pb);
   const D=P.map((p,i)=>({x:X(i),y:Y(p.e),e:p.e}));
   let d='M '+D[0].x+' '+D[0].y;
   for(let i=0;i<D.length-1;i++){const a=D[i-1]||D[i],b=D[i],c=D[i+1],e=D[i+2]||c;
     d+=` C ${b.x+(c.x-a.x)/6} ${b.y+(c.y-a.y)/6} ${c.x-(e.x-b.x)/6} ${c.y-(e.y-b.y)/6} ${c.x} ${c.y}`;}
   const area=d+` L ${D[D.length-1].x} ${H-pb} L ${D[0].x} ${H-pb} Z`;
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Balance acumulado">
+  const last=D[D.length-1];
+  const up=start!=null&&last.e>=start;
+  // 3 marcas en el eje: minimo, medio, maximo. Con 0 de eje el grafico miente.
+  const ticks=[mx,mn+(mx-mn)/2,mn].map(v=>{
+    const y=Y(v);
+    return `<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4" opacity=".55"/>
+    <text x="${pl-6}" y="${y+3.5}" text-anchor="end" font-size="10" fill="var(--fg-faint)" font-family="var(--font-num)">$${nf(v)}</text>`;}).join('');
+  const base=(start!=null)?`<line x1="${pl}" y1="${Y(start)}" x2="${W-pr}" y2="${Y(start)}" stroke="${up?'var(--pos)':'var(--neg)'}" stroke-width="1.4" opacity=".7" stroke-dasharray="5 3"/>
+    <text x="${W-pr}" y="${Y(start)-5}" text-anchor="end" font-size="9.5" fill="var(--fg-faint)" font-family="var(--font-num)">capital $${nf(start)}</text>`:'';
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
+    aria-label="Balance acumulado de ${P.length} puntos, de $${nf(ys[0])} a $${nf(last.e)}">
     <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="var(--p-copper-400)" stop-opacity=".34"/>
       <stop offset="100%" stop-color="var(--p-copper-500)" stop-opacity="0"/></linearGradient></defs>
+    ${ticks}${base}
     <path d="${area}" fill="url(#g)"/>
     <path d="${d}" fill="none" stroke="var(--p-copper-400)" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linecap="round"/>
-    <circle cx="${D[D.length-1].x}" cy="${D[D.length-1].y}" r="3" fill="var(--p-copper-300)"/></svg>`;
+    <circle cx="${last.x}" cy="${last.y}" r="3" fill="var(--p-copper-300)"/></svg>`;
   const w=el;
-  w.onmousemove=e=>{const r=w.getBoundingClientRect(),rx=(e.clientX-r.left)/r.width*W;
+  const show=i=>{
+    const b=D[i],t=$('ctip'),dt=new Date((P[i].t||0)*1000);
+    t.style.display='block';t.style.left=(b.x/W*100)+'%';t.style.top=(b.y/H*100)+'%';
+    const rel=start?((b.e/start-1)*100):null;
+    t.innerHTML=`<small>${dt.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</small>$${nf(b.e)}`
+      +(rel!=null?`<em class="${rel>=0?'pos':'neg'}">${rel>=0?'+':''}${rel.toFixed(2)}%</em>`:'');
+  };
+  const near=e=>{
+    const r=w.getBoundingClientRect(),rx=(e.clientX-r.left)/r.width*W;
     let b=0,bd=1e9;D.forEach((p,i)=>{const t=Math.abs(p.x-rx);if(t<bd){bd=t;b=i}});
-    const t=$('ctip'),dt=new Date((P[b].t||0)*1000);
-    t.style.display='block';t.style.left=(D[b].x/W*100)+'%';t.style.top=(D[b].y/H*100)+'%';
-    t.innerHTML=`<small>${dt.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</small>$${nf(D[b].e)}`;};
+    show(b);
+  };
+  w.onmousemove=near;
+  // equivalente tactil: sin esto el tooltip es inalcanzable en movil
+  w.ontouchstart=e=>{if(e.touches&&e.touches[0])near(e.touches[0]);};
+  w.ontouchmove=e=>{if(e.touches&&e.touches[0])near(e.touches[0]);};
   w.onmouseleave=()=>{$('ctip').style.display='none';};
 }
 
@@ -568,9 +652,21 @@ function render(d){
   bd.textContent=sgn(pct)+fmt(Math.abs(pct),2)+'% '+arrow(pct)+(eq.start?('  desde $'+nf(eq.start)):'');
   $('eqReal').textContent=((eq.equity-eq.start)<0?'-':'')+'$'+nf(Math.abs(eq.equity-eq.start));
   const eu=$('eqUnreal');eu.className='v '+cls(unreal);eu.textContent=sgn(unreal)+'$'+nf(Math.abs(unreal));
+  // DD máx: la API lo manda en equity.max_dd_pct. Antes se quedaba en "—"
+  // y el peor downside histórico nunca se veía en un panel que es de riesgo.
+  const dd=$('eqDD');
+  const ddv=(eq.max_dd_pct!=null)?(Number(eq.max_dd_pct).toFixed(2)+'%'):'—';
+  dd.textContent=ddv;
+  dd.className='v '+(ddv!=='—'&&Number(eq.max_dd_pct)>0?'warn':'');
+  dd.title='Peor caída desde el máximo de equity, medida por el bot';
+
   const slo=(met.slo&&met.slo.length)||0,errs=d.data_errors||0;
+  // El chip de posiciones DEBE marcar la violacion si hay mas abiertas que el
+  // limite: un tablero de operaciones que no avisa de un exceso de riesgo es
+  // peor que no tener tablero. (Incidente 2026-10-02: 3 posiciones con tope 2.)
+  const maxc=st.max_concurrent||5, over=pos.length>maxc;
   $('eqChips').innerHTML=[
-    ['posiciones '+pos.length+'/'+(st.max_concurrent||5),''],
+    [over?('⚠ posiciones '+pos.length+'/'+maxc+' (excede el límite)'):('posiciones '+pos.length+'/'+maxc),over?'warn':''],
     ['decisiones '+(d.cycles||0),''],
     ['errores '+errs,errs?'neg':''],
     ['latencia '+(met.lat_p50_ms?fmt(met.lat_p50_ms,0)+' ms':'—'),''],
@@ -579,6 +675,33 @@ function render(d){
 
   $('chartSub').textContent=(pos.length&&fresh!=null)?('marcado a mercado · hace '+Math.round(fresh)+' s'):'equidad acumulada';
   chart(d.equity_curve,total);
+
+  /* --- calibracion de Jev ---
+     El proyecto midio que el "execute" de Jev NO es una probabilidad calibrada:
+     Brier 0.356 vs 0.311 de tasa base, ECE 0.367. Eso significa que el umbral
+     0.65 no significa nada estadisticamente. Mostrarlo es honesto; esconderlo
+     seria presentar un numero sin contexto. */
+  const cali=d.calibration||{};
+  const nEval=cali.n_evaluated||0;
+  const buckets=cali.buckets||{};
+  const bk=Object.keys(buckets);
+  const caliOk=(cali.brier!=null&&cali.brier<=0.311);
+  $('calibSub').textContent=nEval?('medido sobre '+nEval+' resultado'+(nEval===1?'':'s')):'acumulando muestras';
+  if(!nEval){
+    $('calibBody').innerHTML='<div class="empty">Sin resultados maduros todavía. Las decisiones se miden a 1, 5 y 20 días: el primer resultado llega tras el primer horizonte.</div>';
+  }else{
+    const br=Number(cali.brier);
+    const inv=(1-Math.min(1,br/0.6))*100;
+    $('calibBody').innerHTML=
+      '<div class="calib-row"><span class="k">Brier score</span>'
+      +'<span class="v '+(caliOk?'pos':'warn')+'">'+br.toFixed(3)
+      +'<span class="bar"><i style="width:'+inv.toFixed(0)+'%;background:var(--'+(caliOk?'pos':'warn')+')"></i></span></span></div>'
+      +'<div class="calib-row"><span class="k">Tasa base (referencia)</span><span class="v">0.311</span></div>'
+      +'<div class="calib-row"><span class="k">Buckets de execute</span><span class="v">'+bk.length+'</span></div>'
+      +'<div class="calib-note">'+(caliOk
+        ?'<b>Calibrado.</b> El "execute" de Jev ordena los resultados: se puede usar como umbral.'
+        :'<b>Sin calibrar.</b> El "execute" no supera a la tasa base, así que el umbral 0.65 es heurístico, no probabilístico. El motor sigue siendo el que decide.')+'</div>';
+  }
 
   /* --- detalle --- */
   const tabs=Object.keys(dec).filter(hit);
@@ -692,18 +815,32 @@ $('mApi').href=(LIVE?API+'/api/public':'./snapshot.json');
 $('mHealth').href=(LIVE?API+'/health':'#');
 
 /* ================= datos ================= */
+// Guarda de vuelo en curso (2026-10-02): setInterval dispara cada 1s pero con
+// latencias de 75-420ms varias peticiones se solapaban y podían renderizar
+// fuera de orden, mostrando datos viejos por encima de los nuevos.
+let _inflight=false, _abort=null;
 async function tick(){
-  if(!feedOn)return;
+  if(!feedOn||_inflight)return;
+  _inflight=true;
   try{
     const url=LIVE?(API+'/api/public'):('./snapshot.json?t='+Date.now());
-    const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw 0;
-    render(await r.json());fails=0;
+    const ctl=new AbortController();_abort=ctl;
+    const r=await fetch(url,{cache:'no-store',signal:ctl.signal});
+    if(!r.ok)throw 0;
+    const data=await r.json();
+    render(data);fails=0;lastOk=Date.now()/1000;
   }catch(e){
-    fails++;
-    if(fails>=3&&LIVE&&CANDS.length>1){ci=(ci+1)%CANDS.length;API=CANDS[ci];LIVE=API.startsWith('http');}
-    if(lastData)$('apihint').innerHTML='Conexión interrumpida · último dato '+ago(Date.now()/1000-lastOk)+'';
+    if(e&&e.name==='AbortError'){/* cancelado: no cuenta como fallo */}
+    else{
+      fails++;
+      if(fails>=3&&LIVE&&CANDS.length>1){ci=(ci+1)%CANDS.length;API=CANDS[ci];LIVE=API.startsWith('http');}
+      if(lastData&&$('apihint'))$('apihint').innerHTML='Conexión interrumpida · último dato '+ago(Date.now()/1000-lastOk)+'';
+    }
+  }finally{
+    _inflight=false;_abort=null;
   }
 }
+function pausar(){if(_abort){try{_abort.abort()}catch(e){}}}
 
 /* ================= cristal 3D (mejora progresiva) ================= */
 function boot3D(){
