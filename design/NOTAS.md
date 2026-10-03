@@ -32,3 +32,10 @@
 - **OpenGameArt wallpaper**: licencia NO verificada → descartado.
 - **Perf**: three.js pesa 1.27 MB (perezoso). **§11 no se recibió**, así que el presupuesto
   exacto no se puede comprobar. Marcado como pendiente de confirmación.
+
+## 2026-10-03 — Referencia visual Pinterest
+- Se reemplazó la composición terminal por un panel oscuro/claro con rail lateral, tarjetas
+  redondeadas, perfil de estado Sentinel/Jev y una ilustración orbital SVG animada.
+- La ilustración es decorativa; los elementos que parecen gráficos se reservan para datos reales.
+- Se conserva el feed de Sentinel, el contexto de Jev y la semántica de P&L con signo y flecha.
+- Los assets three.js y GLB quedan conservados en el proyecto, pero el dashboard ya no los carga.

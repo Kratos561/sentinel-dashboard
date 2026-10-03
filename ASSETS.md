@@ -1,7 +1,8 @@
 ﻿# ASSETS.md — registro de recursos y licencias (§7)
 
-Todos los recursos están **autoalojados** en el repo (sin CDN en runtime) y verificados
-(HTTP 200 + magic bytes). Licencias compatibles con uso comercial + web.
+Los recursos tipográficos están **autoalojados** (sin CDN). Desde el rediseño v16, la escena
+orbital se dibuja con SVG/CSS y three.js/GLB se conservan como alternativas locales, pero no se
+cargan durante el uso del dashboard.
 
 ## Fuentes (OFL 1.1) — `assets/fonts/`
 | Archivo | Origen | Licencia | Peso | Nota |
@@ -18,8 +19,8 @@ Todos los recursos están **autoalojados** en el repo (sin CDN en runtime) y ver
 ## Modelo 3D (CC0) — `assets/models/`
 | Archivo | Origen | Licencia | Peso | Nota |
 |---|---|---|---|---|
-| `crystal-big.glb` | "Big Crystal", Quaternius vía [Poly Pizza](https://poly.pizza/m/pf5lzmgr2J) | **CC0 1.0** (public domain) | 32.8 KB | Etiqueta CC0 por archivo. Objeto abstracto, **sin personaje ni marca**. |
-| `coin.glb` | "Coin", Quaternius vía [Poly Pizza](https://poly.pizza/m/QHZtj94fvh) | **CC0 1.0** | 13.5 KB | Alternativa/badge. |
+| `crystal-big.glb` | "Big Crystal", Quaternius vía [Poly Pizza](https://poly.pizza/m/pf5lzmgr2J) | **CC0 1.0** (public domain) | 32.8 KB | Conservado, no se carga en v16. Objeto abstracto, **sin personaje ni marca**. |
+| `coin.glb` | "Coin", Quaternius vía [Poly Pizza](https://poly.pizza/m/QHZtj94fvh) | **CC0 1.0** | 13.5 KB | Alternativa conservada, no se carga en v16. |
 
 > **Aviso de licencia:** Quaternius migró su licencia general a "QAL" (no retroactiva).
 > Los packs **anteriores a 2026** son **CC0** y Poly Pizza registra estos archivos con
@@ -29,15 +30,15 @@ Todos los recursos están **autoalojados** en el repo (sin CDN en runtime) y ver
 ## Librería 3D — `assets/vendor/three/`
 | Archivo | Origen | Licencia | Peso | Nota |
 |---|---|---|---|---|
-| `three.module.js` | three.js r160 (jsDelivr, build oficial) | **MIT** | 1.27 MB | Cargada **perezosa** (IntersectionObserver); ver nota de perf. |
-| `GLTFLoader.js` | three.js r160 (examples/jsm) | **MIT** | 108 KB | Import map resuelve el specifier `three`. |
+| `three.module.js` | three.js r160 (jsDelivr, build oficial) | **MIT** | 1.27 MB | Conservada, no se carga en v16. |
+| `GLTFLoader.js` | three.js r160 (examples/jsm) | **MIT** | 108 KB | Conservada, no se carga en v16. |
 
 ## Iconografía
 SVG inline escritas a mano (trazo redondeado uniforme). Sin librería de iconos externa.
 
-## Grano / glow
-Generados en código (feTurbulence / gradientes CSS). **Cero licencia** — no se descargó
-ningún pack de texturas (los de Kenney eran 15 MB cada uno; innecesario con SVG nativo).
+## Ilustración orbital
+SVG inline y gradientes CSS, animados con `transform` y `stroke-dashoffset`. Sin imágenes
+externas ni petición de red adicional.
 
 ---
 
@@ -49,8 +50,5 @@ ningún pack de texturas (los de Kenney eran 15 MB cada uno; innecesario con SVG
 - ❌ CC-BY que exigen crédito visible → evitados (CC0/OFL eligen).
 
 ### Coste total de payload local
-`~1.48 MB` de los cuales **fonts ~79 KB**, **modelos ~47 KB**, **three.js ~1.38 MB (perezoso)**,
-**emblema SVG ~2 KB (fallback)**. El 3D se carga **solo al hacer scroll al hero** y cae al
-emblema SVG si no hay WebGL. **Pendiente de tu confirmación:** el presupuesto de §11 (que no
-recibí) podría pedir no superarse en X KB; si es estricto, quito three.js y dejo el cristal
-como PNG/estático o el emblema SVG.
+**Runtime v16:** fuentes ~79 KB más HTML/CSS/JS; three.js y modelos no se descargan. El peso
+total de assets conservados no equivale al payload de la página.

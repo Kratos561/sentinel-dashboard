@@ -1,279 +1,37 @@
-/* ============================================================================
-   SENTINEL 0 — tokens
-   ----------------------------------------------------------------------------
-   Dirección: terminal Bloomberg. Sobrio, denso, información primero.
-   El color se reserva para P/L y estados semánticos. Nada decorativo.
+/* Design tokens for Sentinel 0: rounded charcoal surfaces, violet light, clear status color. */
+@font-face{font-family:InterVar;src:url('fonts/Inter-var.woff2') format('woff2-variations');font-weight:100 900;font-display:swap}
+@font-face{font-family:Poppins;src:url('fonts/Poppins-400.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:Poppins;src:url('fonts/Poppins-500.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:Poppins;src:url('fonts/Poppins-600.woff2') format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:Poppins;src:url('fonts/Poppins-700.woff2') format('woff2');font-weight:700;font-display:swap}
 
-   Capas: primitivo -> semántico -> componente. La UI nunca toca un primitivo.
-   ============================================================================ */
-
-/* ------------------------------------------------------------------ FUENTES */
-/* Poppins (UI) + Inter var (cifras, tabular). Ambas autoalojadas, OFL 1.1.
-   La monoespaciada no viene de CDN: se usa la pila del sistema porque SOLO
-   aparece en datos y mediciones, nunca como voz de display. */
-@font-face {
-  font-family: 'InterVar';
-  src: url('fonts/Inter-var.woff2') format('woff2-variations');
-  font-weight: 100 900;
-  font-display: swap;
+:root{
+  color-scheme:dark;
+  --font-ui:'Poppins',system-ui,'Segoe UI',sans-serif;
+  --font-num:'InterVar',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  --page:#191a21;--shell:#252731;--sidebar:#22232d;--panel:#2d303b;--panel-hi:#333641;--inset:#252731;
+  --line:#3c3e4a;--line-soft:#373945;--line-strong:#505260;
+  --fg:#f4f3fa;--muted:#d0cfda;--dim:#a6a6b4;--faint:#858594;
+  --purple:#c365f2;--purple-deep:#8e35d1;--purple-wash:rgba(187,79,234,.15);--pink:#ef64da;
+  --blue:#72b6fa;--mint:#66d9b0;--gain:#53d69b;--gain-wash:rgba(83,214,155,.14);
+  --loss:#ff7987;--loss-wash:rgba(255,121,135,.14);--warn:#ffbf63;--warn-wash:rgba(255,191,99,.15);--info:#78baff;
+  --shadow:0 24px 70px rgba(0,0,0,.26);--shadow-soft:0 8px 24px rgba(0,0,0,.11);
+  --r-xs:7px;--r-sm:10px;--r-md:14px;--r-lg:20px;--r-xl:26px;--pill:999px;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:20px;--s-6:24px;--s-7:32px;--s-8:40px;
+  --t-xs:11px;--t-sm:12px;--t-base:13px;--t-md:14px;--t-lg:17px;--t-xl:21px;--t-2xl:28px;--t-3xl:35px;
+  --ease:cubic-bezier(.2,.75,.25,1);--fast:160ms var(--ease);--base:240ms var(--ease);--slow:420ms var(--ease);
 }
-@font-face {
-  font-family: 'Poppins';
-  src: url('fonts/Poppins-400.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
+[data-theme='light']{
+  color-scheme:light;
+  --page:#e9e2f3;--shell:#fcfbfe;--sidebar:#f8f7fb;--panel:#fff;--panel-hi:#f7f4fb;--inset:#f3f0f8;
+  --line:#e6e2eb;--line-soft:#efedf3;--line-strong:#d5d0df;
+  --fg:#252433;--muted:#484655;--dim:#686676;--faint:#777585;
+  --purple:#9e35ca;--purple-deep:#7922b3;--purple-wash:rgba(161,52,200,.1);--pink:#bd37ad;
+  --blue:#347bd1;--mint:#188d72;--gain:#118456;--gain-wash:rgba(17,132,86,.1);
+  --loss:#ce4359;--loss-wash:rgba(206,67,89,.1);--warn:#925a0c;--warn-wash:rgba(224,154,48,.15);--info:#286eb8;
+  --shadow:0 24px 70px rgba(56,36,84,.11);--shadow-soft:0 8px 24px rgba(42,28,67,.06);
 }
-@font-face {
-  font-family: 'Poppins';
-  src: url('fonts/Poppins-500.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Poppins';
-  src: url('fonts/Poppins-600.woff2') format('woff2');
-  font-weight: 600;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Poppins';
-  src: url('fonts/Poppins-700.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-:root {
-  --font-ui: 'Poppins', system-ui, 'Segoe UI', sans-serif;
-  --font-num: 'InterVar', ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  /* OJO: las url() de este archivo se resuelven contra assets/ (la URL del CSS),
-     no contra la del documento. Las fuentes son HERMANAS de este archivo, por eso
-     van como 'fonts/...' y no como './assets/fonts/...' — esa forma daba 404. */
-
-  /* ------------------------------------------------------- PRIMITIVOS: color */
-  /* Superficies. Escala de 5 pasos, muy juntos: es una mesa densa, no una web. */
-  --p-void-950: #07090C;   /* fondo de la pagina */
-  --p-void-900: #0B0E13;   /* superficie base */
-  --p-void-850: #11151C;   /* panel */
-  --p-void-800: #171C24;   /* panel elevado / hover */
-  --p-void-750: #1E242E;   /* activo / inset marcado */
-  --p-void-700: #262D38;   /* borde fuerte */
-
-  /* Tinta. 5 pasos, todos medidos contra las superficies de arriba. */
-  --p-ink-050: #F4F6F8;   /* texto primario      16.9:1 sobre void-850 */
-  --p-ink-200: #C3CAD4;   /* texto secundario     9.6:1 */
-  --p-ink-400: #8C95A3;   /* texto de apoyo       5.4:1  <- AA */
-  --p-ink-500: #6B7381;   /* texto tenue          3.4:1  solo texto >=18px */
-  --p-ink-600: #4A515C;   /* texto no-essential   2.1:1  decorativo unicamente */
-
-  /* Bordes. Tenues por defecto, fuertes para separar regiones de datos. */
-  --p-line-100: #1A1F27;  /* divisor interior */
-  --p-line-200: #252C36;  /* borde de panel */
-  --p-line-300: #333B47;  /* borde emphasised */
-
-  /* Semanticos de mercado. Verde/rojo jamming SE USA con signo y flecha. */
-  --p-gain-400: #3ECF8E;
-  --p-gain-600: #22A06B;
-  --p-gain-900: #0E3A28;   /* wash */
-
-  --p-loss-400: #FF6B6B;
-  --p-loss-600: #E5484D;
-  --p-loss-900: #3D1620;   /* wash */
-
-  /* Acento unico: cobre. Solo para accion y foco. Nunca decorativo. */
-  --p-copper-300: #F5C08A;
-  --p-copper-400: #E08B45;
-  --p-copper-600: #B4682C;
-  --p-copper-900: #2E1A0C;  /* wash */
-
-  /* Aviso: tercer estado, ni ganancia ni perdida. */
-  --p-warn-300: #FCD34D;
-  --p-warn-400: #FBBF24;
-  --p-warn-600: #B45309;
-  --p-warn-900: #2E2208;   /* wash */
-
-  --p-info-400: #60A5FA;
-
-  /* --------------------------------------------------- PRIMITIVOS: medidas */
-  /* Escala de 4px. Terminales densos: los pasos son de 2, no de 4. */
-  --sp-1: 2px;
-  --sp-2: 4px;
-  --sp-3: 6px;
-  --sp-4: 8px;
-  --sp-5: 12px;
-  --sp-6: 16px;
-  --sp-7: 20px;
-  --sp-8: 24px;
-  --sp-9: 32px;
-
-  --r-xs: 2px;
-  --r-sm: 3px;
-  --r-md: 4px;
-  --r-lg: 6px;
-  --r-pill: 999px;
-
-  --bw-hair: 1px;
-  --bw-thick: 2px;
-
-  /* Sombras: desplazamiento real + desenfoque, sobre negro. Un halo de color sin
-     offset es decoracion, no profundidad — y el detector lo marco como
-     "dark-glow": sombra cromatica difuminada sobre fondo oscuro. La seleccion de
-     activo se señala con el borde y el fondo, no con un resplandor. */
-  --sh-1: 0 1px 2px rgba(0, 0, 0, .5);
-  --sh-2: 0 4px 12px -2px rgba(0, 0, 0, .6);
-  --sh-3: 0 12px 32px -8px rgba(0, 0, 0, .7);
-  --sh-focus: 0 0 0 1px var(--p-copper-400);
-
-  /* Movimiento: 150-250ms, exponencial hacia fuera. Curva unica para todo. */
-  --t-fast: 120ms cubic-bezier(.2, 0, .2, 1);
-  --t-base: 180ms cubic-bezier(.2, 0, .2, 1);
-  --t-slow: 260ms cubic-bezier(.16, 1, .3, 1);
-}
-
-/* ------------------------------------------------------------ TEMA CLARO */
-/* Elegido por la escena: de dia, pantalla en una oficina. No por categoria. */
-[data-theme='light'] {
-  --p-void-950: #EDEFF2;
-  --p-void-900: #F5F6F8;
-  --p-void-850: #FFFFFF;
-  --p-void-800: #F7F9FB;
-  --p-void-750: #EDF0F4;
-  --p-void-700: #D3D9E1;
-
-  --p-ink-050: #0B0E13;
-  --p-ink-200: #2E3641;
-  --p-ink-400: #4A5462;   /* 8.9:1 sobre blanco */
-  --p-ink-500: #5F6977;   /* 6.4:1 — minimo AA para texto pequeno */
-  --p-ink-600: #7C8694;   /* 4.6:1 — solo >=18px o decorativo */
-
-  --p-line-100: #EAEDF1;
-  --p-line-200: #DCE1E7;
-  --p-line-300: #C2CAD4;
-
-  --p-gain-400: #0E9F63;
-  --p-gain-600: #077A4B;
-  --p-gain-900: #DFF4E9;
-
-  --p-loss-400: #D5393E;
-  --p-loss-600: #B42328;
-  --p-loss-900: #FCE7E8;
-
-  --p-copper-300: #8A4E1D;
-  --p-copper-400: #B4682C;
-  --p-copper-600: #D68B3F;
-  --p-copper-900: #FCEFDF;
-
-  --p-warn-300: #8A5200;
-  --p-warn-400: #B45309;
-  --p-warn-600: #92400E;
-  --p-warn-900: #FDF1DC;
-
-  --p-info-400: #2563EB;
-  --sh-1: 0 1px 2px rgba(16, 24, 40, .06);
-  --sh-2: 0 4px 12px -2px rgba(16, 24, 40, .1);
-  --sh-3: 0 12px 32px -8px rgba(16, 24, 40, .14);
-}
-
-/* ================================================================== SEMANTICOS */
-:root, [data-theme='light'] {
-  /* superficies */
-  --bg-page: var(--p-void-950);
-  --bg-shell: var(--p-void-900);
-  --bg-panel: var(--p-void-850);
-  --bg-raised: var(--p-void-800);
-  --bg-inset: var(--p-void-900);
-  --bg-hover: var(--p-void-800);
-  --bg-active: var(--p-void-750);
-
-  /* tinta */
-  --fg: var(--p-ink-050);
-  --fg-muted: var(--p-ink-200);
-  --fg-dim: var(--p-ink-400);
-  --fg-faint: var(--p-ink-400);
-  /* --fg-ghost paso de ink-500 a ink-400. Medido en navegador: ink-500 daba
-     3.83:1 y lo usaba en 5 elementos con texto de 10px (subtitulos de panel,
-     metadata de tarjeta, pie, sublinea de la marca). AA pide 4.5:1 para texto
-     pequeno, asi que no podia quedar como "decorativo": son datos. */
-  --fg-ghost: var(--p-ink-400);
-
-  /* lineas */
-  --line: var(--p-line-200);
-  --line-soft: var(--p-line-100);
-  --line-strong: var(--p-line-300);
-  --line-accent: var(--p-copper-600);
-
-  /* semanticos */
-  --accent: var(--p-copper-400);
-  --accent-text: var(--p-copper-300);
-  --accent-wash: color-mix(in srgb, var(--p-copper-400) 12%, transparent);
-
-  --pos: var(--p-gain-400);
-  --pos-text: var(--p-gain-400);
-  --pos-wash: var(--p-gain-900);
-
-  --neg: var(--p-loss-400);
-  --neg-text: var(--p-loss-400);
-  --neg-wash: var(--p-loss-900);
-
-  --warn: var(--p-warn-400);
-  --warn-text: var(--p-warn-300);
-  --warn-wash: var(--p-warn-900);
-
-  --info: var(--p-info-400);
-
-  /* Tipografia: 7 pasos. Terminal denso, asi que los cuerpos son pequenos pero
-     la jerarquia entre niveles es obvia.
-     --t-micro arranca en 11px, no en 10px: el detector de diseno marco 50 usos
-     de 10px como texto funcional por debajo del piso de legibilidad. 10px se ve
-     bien en un mockup de 1440px y falla en pantallas de alta densidad y en
-     telefonos. La densidad se consigue acortando el paso, noQueuebrando el piso. */
-  --t-micro: 11px;
-  --t-tiny: 12px;
-  --t-small: 12.5px;
-  --t-base: 13.5px;
-  --t-md: 15px;
-  --t-lg: 18px;
-  --t-xl: 24px;
-  --t-xl2: 32px;
-  --t-xl3: 42px;
-
-  --track-tight: -.02em;
-  --track-wide: .06em;
-}
-
-/* =================================================================== COMPONENTES */
-:root {
-  /* Barra superior */
-  --top-h: 44px;
-
-  /* Panel: borde tenue, sin sombra salvo elevacion. Terminal: plano. */
-  --panel-bg: var(--bg-panel);
-  --panel-border: var(--line);
-  --panel-pad: var(--sp-5);
-  --panel-radius: var(--r-lg);
-
-  /* Tabla de datos: la unidad fundamental de una mesa */
-  --row-h: 26px;
-  --cell-pad: 0 var(--sp-4);
-
-  /* Cifras siempre alineadas: una columna de numeros que baila es ilegible */
-  --tabular: tabular-nums;
-  --numeric-align: right;
-}
-
-/* --------------------------------------------------------------- ACEPTADAS */
-/* Recorte de texto largo sin romper layout. */
-.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Solo para lectores de pantalla. */
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-}
-
-/* Foco visible en todo lo focable: en un tema oscuro un anillo invisible
-   deja al usuario de teclado sin saber donde esta. */
-:focus-visible {
-  outline: var(--bw-thick) solid var(--accent);
-  outline-offset: 1px;
-  border-radius: var(--r-xs);
-}
+:root,[data-theme='light']{--background:var(--page);--surface:var(--shell);--surface-side:var(--sidebar);--surface-card:var(--panel);--surface-raised:var(--panel-hi);--surface-inset:var(--inset);--text:var(--fg);--text-muted:var(--muted);--text-dim:var(--dim);--border:var(--line);--border-soft:var(--line-soft);--positive:var(--gain);--negative:var(--loss);--warning:var(--warn)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:2px solid var(--purple);outline-offset:3px}
+::selection{background:var(--purple);color:white}
