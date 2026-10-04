@@ -107,6 +107,7 @@ function chart(series,currentTotal,start){
 /* --------------------------------------------------------------- RENDER */
 function render(d){
   lastData=d;
+  if(isScalp(d))return renderScalp(d);
   const eq=d.equity||{},positions=markedPositions(d),trades=Array.isArray(d.trades)?d.trades:[],decisions=d.decisions||{},strategy=d.strategy||{},metrics=d.metrics||{},providers=d.providers?.sources||[],cycles=Array.isArray(d.cycles_influx)?d.cycles_influx:[],context=d.context||{};
   const symbols=(strategy.symbols||Object.keys(decisions)).filter(s=>!query||`${s} ${SYM(s)}`.toLowerCase().includes(query));
   if(!symbols.includes(selected))selected=symbols[0]||Object.keys(decisions)[0]||'';
@@ -213,7 +214,7 @@ async function tick(){
     const url=LIVE?`${API}/api/public`:`./snapshot.json?t=${Date.now()}`;
     const response=await fetch(url,{cache:'no-store',signal:ctl.signal});clearTimeout(timer);if(!response.ok)throw new Error(`HTTP ${response.status}`);
     const data=await response.json();if(!data||typeof data!=='object'||!data.equity||!data.strategy)throw new Error('Respuesta incompleta de Sentinel');
-    lastOk=Date.now()/1000;render(data);fails=0;$('apihint').textContent=`Sentinel en vivo · ${API.replace(/^https?:\/\//,'')} · actualización cada segundo`;
+    lastOk=Date.now()/1000;render(data);if(isScalp(data))pushScalpSample(data);fails=0;$('apihint').textContent=`Sentinel en vivo · ${API.replace(/^https?:\/\//,'')} · actualización cada segundo`;
   }catch(e){
     if(e?.name!=='AbortError'){fails++;if(fails>=3&&LIVE&&candidate<CANDS.length-1){candidate++;API=CANDS[candidate];LIVE=API.startsWith('http')}if(lastData)$('apihint').textContent=`conexión interrumpida · último dato hace ${ago(Date.now()/1000-lastOk)}`;else $('apihint').textContent='Sentinel no está disponible; reintentando';}
   }finally{inflight=false;abortFetch=null;}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171923">
   <title>Sentinel 0 · panel de operaciones</title>
-  <meta name="description" content="Panel en vivo de Sentinel 0 y las decisiones diarias de Jev: exposición, posiciones, resultados y salud del sistema.">
+  <meta name="description" content="Panel en vivo del shadow de scalp de Sentinel 0: estado del libro de ordenes, senales medidas, resultado en basis points y cobertura del coste">
   <link rel="stylesheet" href="assets/tokens.css?v=16">
   <link rel="stylesheet" href="assets/styles.css?v=16">
 </head>
@@ -19,13 +19,13 @@
         <span class="brand-emblem" aria-hidden="true">
           <svg viewBox="0 0 40 40"><path d="M20 3.5 34.3 11v18L20 36.5 5.7 29V11z"/><path d="M20 11v18M12.5 15.2l15 9.6"/><circle cx="20" cy="20" r="3.1"/></svg>
         </span>
-        <span class="brand-copy"><b>SENTINEL <i>0</i></b><small>DECISIONES CON JEV</small></span>
+        <span class="brand-copy"><b>SENTINEL <i>0</i></b><small>SHADOW · SIN ORDENES</small></span>
       </a>
 
       <div class="nav-caption">OPERACIÓN</div>
       <nav class="nav-list">
         <a class="nav-link" href="#top" data-go="top"><span class="nav-icon" aria-hidden="true">◫</span><span>Resumen</span><span class="nav-mark"></span></a>
-        <a class="nav-link" href="#loopTitle" data-go="loopTitle"><span class="nav-icon" aria-hidden="true">◉</span><span>Ciclo de Jev</span><span class="nav-mark"></span></a>
+        <a class="nav-link" href="#loopTitle" data-go="loopTitle"><span class="nav-icon" aria-hidden="true">◉</span><span>Bucle del scalp</span><span class="nav-mark"></span></a>
         <a class="nav-link" href="#positions" data-go="positions"><span class="nav-icon" aria-hidden="true">▤</span><span>Posiciones</span><span class="nav-count" id="navPositionCount">—</span></a>
         <a class="nav-link" href="#trades" data-go="trades"><span class="nav-icon" aria-hidden="true">↗</span><span>Operaciones</span><span class="nav-mark"></span></a>
       </nav>
@@ -77,23 +77,23 @@
       <main id="main" class="main-content">
         <section class="view on" id="v-resumen" aria-labelledby="welcomeTitle">
           <div class="page-heading" id="top">
-            <div><div class="eyebrow"><span class="eyebrow-star">✦</span> CENTRO DE OPERACIONES</div><h2 id="welcomeTitle">Buenos días, MSI<span class="heading-period">.</span></h2><p id="welcomeSub">Sentinel vigila el mercado. Jev aporta la señal; el motor valida el riesgo.</p></div>
+            <div><div class="eyebrow"><span class="eyebrow-star">✦</span> CENTRO DE OPERACIONES</div><h2 id="welcomeTitle">Buenos días, MSI<span class="heading-period">.</span></h2><p id="welcomeSub">Mide el edge en basis points sobre el libro de ordenes. No coloca órdenes.</p></div>
             <div class="date-chip"><span class="calendar-icon" aria-hidden="true">▦</span><span><b id="dateLabel">—</b><small id="timeLabel">hora de Nueva York</small></span><span class="date-caret">⌄</span></div>
           </div>
 
           <div class="stat-cards" aria-label="Resumen de cuenta">
             <article class="stat-card stat-card-balance">
-              <div class="stat-top"><span class="stat-label">Balance actual</span><span class="stat-icon purple-icon" aria-hidden="true">◈</span></div>
+              <div class="stat-top"><span class="stat-label">Resultado del shadow</span><span class="stat-icon purple-icon" aria-hidden="true">◈</span></div>
               <div class="stat-value" id="balNum">—</div>
               <div class="stat-foot"><span class="status-tag" id="ledgerTag">esperando datos</span><span id="balDelta" class="stat-change">—</span></div>
             </article>
             <article class="stat-card">
-              <div class="stat-top"><span class="stat-label">Exposición abierta</span><span class="stat-icon blue-icon" aria-hidden="true">↗</span></div>
+              <div class="stat-top"><span class="stat-label">Horizonte y coste</span><span class="stat-icon blue-icon" aria-hidden="true">↗</span></div>
               <div class="stat-value" id="exposureValue">—</div>
-              <div class="stat-foot"><span class="stat-note">nocional en posiciones</span><span class="mini-trend" id="exposureCount">—</span></div>
+              <div class="stat-foot"><span class="stat-note">spread del libro, en bps</span><span class="mini-trend" id="exposureCount">—</span></div>
             </article>
             <article class="stat-card">
-              <div class="stat-top"><span class="stat-label">Proveedores en vivo</span><span class="stat-icon mint-icon" aria-hidden="true">◎</span></div>
+              <div class="stat-top"><span class="stat-label">Libro de ordenes</span><span class="stat-icon mint-icon" aria-hidden="true">◎</span></div>
               <div class="stat-value" id="providerValue">—</div>
               <div class="stat-foot"><span class="stat-note" id="providerNote">estado de datos de mercado</span><span class="provider-indicator" id="providerIndicator"></span></div>
             </article>
@@ -103,14 +103,14 @@
             <aside class="status-card panel">
               <div class="sentinel-orb" aria-hidden="true"><span class="orb-ring orb-ring-outer"></span><span class="orb-ring orb-ring-inner"></span><span class="orb-core">S</span><span class="orb-satellite"></span></div>
               <div class="status-name">SENTINEL <span>0</span></div>
-              <div class="status-sub" id="agentStatus">Jev · esperando señal</div>
+              <div class="status-sub" id="agentStatus">Feed del libro · connecting</div>
               <div class="status-divider"></div>
               <div class="status-list">
-                <div class="status-row"><span class="status-row-icon">⌁</span><span>Decisión de Jev</span><b id="decisionFreshness">—</b></div>
-                <div class="status-row"><span class="status-row-icon">◉</span><span>Proveedores</span><b id="providerCompact">—</b></div>
-                <div class="status-row status-row-risk" id="riskStatusRow"><span class="status-row-icon">△</span><span>Límite de posiciones</span><b id="positionLimit">—</b></div>
+                <div class="status-row"><span class="status-row-icon">⌁</span><span>Estado del feed</span><b id="decisionFreshness">—</b></div>
+                <div class="status-row"><span class="status-row-icon">◉</span><span>Libro</span><b id="providerCompact">—</b></div>
+                <div class="status-row status-row-risk" id="riskStatusRow"><span class="status-row-icon">△</span><span>Posiciones reales</span><b id="positionLimit">—</b></div>
               </div>
-              <div class="risk-meter"><div class="risk-meter-top"><span>Uso de slots</span><b id="riskMeterLabel">—</b></div><div class="meter-track"><i id="riskMeterBar"></i></div></div>
+              <div class="risk-meter"><div class="risk-meter-top"><span>Trayectorias</span><b id="riskMeterLabel">—</b></div><div class="meter-track"><i id="riskMeterBar"></i></div></div>
               <a class="text-link" href="#health">Ver estado del sistema <span>→</span></a>
             </aside>
 
@@ -135,9 +135,9 @@
                 </div>
                 <div class="hero-shade"></div>
                 <div class="hero-content">
-                  <div class="hero-overline"><span class="hero-spark">✦</span> SENTINEL × JEV <span class="hero-separator">/</span> CICLO DI DECISIÓN</div>
+                  <div class="hero-overline"><span class="hero-spark">✦</span> SENTINEL × SHADOW <span class="hero-separator">/</span> BUCLE DEL SCALP</div>
                   <h2 id="heroTitle">La señal, bajo control.</h2>
-                  <p id="heroCopy">Jev analiza. Sentinel aplica los límites antes de ejecutar.</p>
+                  <p id="heroCopy">Midiendo el edge en basis points sobre el libro de órdenes.</p>
                   <div class="hero-decision"><span id="fVerdict" class="verdict HOLD">—</span><b id="fSym">—</b><span id="fPrice">—</span><span class="hero-decision-sep"></span><span id="fDecisionTime">última decisión —</span></div>
                   <div class="hero-actions"><a class="hero-cta" href="#loopTitle">Ver el ciclo <span>↗</span></a><span class="hero-cycle-note" id="fFacts">—</span></div>
                 </div>
@@ -145,7 +145,7 @@
               </section>
 
               <section class="activity-card panel" aria-labelledby="activityTitle">
-                <div class="section-head activity-head"><div><h3 id="activityTitle">Actividad reciente</h3><p>Ciclos registrados por Sentinel</p></div><a class="text-link" href="#cycles">Ver todos <span>→</span></a></div>
+                <div class="section-head activity-head"><div><h3 id="activityTitle">Telemetria del feed</h3><p>Lo que se ve en el libro ahora mismo</p></div><a class="text-link" href="#health">Ver todos <span>→</span></a></div>
                 <div id="activityList" class="activity-list"><div class="loading-row">Esperando los ciclos de Sentinel…</div></div>
               </section>
             </div>
@@ -153,14 +153,14 @@
 
           <div class="lower-grid">
             <section class="panel account-panel" aria-labelledby="balanceTitle">
-              <div class="section-head"><div><h3 id="balanceTitle">Balance y riesgo</h3><p>Capital inicial <b id="startingCapital">—</b> · P&amp;L marcado con precios en vivo</p></div><span class="updated-pill"><i></i><span id="lastUpdated">conectando</span></span></div>
+              <div class="section-head"><div><h3 id="balanceTitle">Coste contra avance</h3><p>Coste por operación <b id="startingCapital">—</b> · resultado medido en basis points</p></div><span class="updated-pill"><i></i><span id="lastUpdated">conectando</span></span></div>
               <div class="account-body">
                 <div class="balance-summary">
-                  <div class="balance-hero"><span class="stat-label">Equidad total</span><b id="balanceLarge">—</b><span id="balanceState">—</span></div>
+                  <div class="balance-hero"><span class="stat-label">Bruta implicita</span><b id="balanceLarge">—</b><span id="balanceState">—</span></div>
                   <div class="account-metrics">
-                    <div class="metric-cell"><span>Realizado</span><b id="eqReal">—</b></div>
-                    <div class="metric-cell"><span>No realizado</span><b id="eqUnreal">—</b></div>
-                    <div class="metric-cell"><span>DD máximo</span><b id="eqDD">—</b></div>
+                    <div class="metric-cell"><span>Bruta por operación</span><b id="eqReal">—</b></div>
+                    <div class="metric-cell"><span>Tasa de acierto</span><b id="eqUnreal">—</b></div>
+                    <div class="metric-cell"><span>Cobertura del coste</span><b id="eqDD">—</b></div>
                   </div>
                 </div>
                 <div id="ledgerAlert" class="ledger-alert" role="status" hidden></div>
@@ -170,31 +170,31 @@
             </section>
 
             <section class="panel positions-panel" aria-labelledby="positionsTitle">
-              <div class="section-head"><div><h3 id="positionsTitle">Posiciones abiertas</h3><p id="posSub">—</p></div><a class="round-link" href="#positions" aria-label="Ver todas las posiciones">↗</a></div>
+              <div class="section-head"><div><h3 id="positionsTitle">Trayectorias en curso</h3><p id="posSub">—</p></div><a class="round-link" href="#positions" aria-label="Ver todas las posiciones">↗</a></div>
               <div id="posList" class="position-list"><div class="loading-row">Cargando posiciones…</div></div>
               <div class="positions-total"><span>Exposición total</span><b id="positionsTotal">—</b></div>
             </section>
           </div>
 
           <section class="panel assets-panel" aria-labelledby="assetsTitle">
-            <div class="section-head"><div><h3 id="assetsTitle">Activos vigilados</h3><p id="assetsSub">Las decisiones de Jev se renuevan una vez al día por activo</p></div><div class="asset-controls"><span class="live-label"><i></i> PRECIOS EN VIVO</span></div></div>
+            <div class="section-head"><div><h3 id="assetsTitle">Instrumento</h3><p id="assetsSub">Instrumento del shadow</p></div><div class="asset-controls"><span class="live-label"><i></i> PRECIOS EN VIVO</span></div></div>
             <div class="asset-grid" id="assets" role="tablist" aria-label="Activos vigilados"><div class="loading-row">Cargando activos…</div></div>
           </section>
 
           <section class="panel calibration-panel" aria-labelledby="calibTitle">
-            <div class="section-head"><div><h3 id="calibTitle">Calibración de Jev</h3><p id="calibSub">—</p></div><span class="calib-mark">JEV / EVALUACIÓN</span></div>
+            <div class="section-head"><div><h3 id="calibTitle">Cobertura del coste</h3><p id="calibSub">—</p></div><span class="calib-mark">JEV / EVALUACIÓN</span></div>
             <div id="calibBody"><div class="loading-row">Midiendo resultados…</div></div>
           </section>
         </section>
 
         <section class="view detail-view" id="v-det" aria-label="Detalle operativo">
-          <div id="loopTitle" class="detail-anchor"><div class="eyebrow">SENTINEL → JEV → REGLAS</div><h2 class="detail-title">Ciclo de decisión<span>.</span></h2><p class="detail-intro">Jev propone dirección y plan. Sentinel valida datos, exposición y límites antes de ejecutar.</p></div>
+          <div id="loopTitle" class="detail-anchor"><div class="eyebrow">SENTINEL · SHADOW · REGLAS</div><h2 class="detail-title">Ciclo de decisión<span>.</span></h2><p class="detail-intro">Jev propone dirección y plan. Sentinel valida datos, exposición y límites antes de ejecutar.</p></div>
           <div class="tabs" id="tabs" role="tablist" aria-label="Activo del ciclo"></div>
           <div class="decision-detail-grid"><div class="panel decision-plan"><div class="section-head"><div><h3>Plan de Jev</h3><p id="decLat">—</p></div><span class="calib-mark">DECISIÓN ACTUAL</span></div><div id="decBody" class="plan-content"><div class="loading-row">Esperando la decisión…</div></div></div><div class="code panel"><div class="section-head"><div><h3>Estado enviado a Jev</h3><p>contexto usado en el ciclo</p></div><span id="stateBytes" class="calib-mark">—</span></div><pre id="stateJson"></pre></div></div>
 
           <section id="market" class="detail-section"><div class="section-head"><div><div class="eyebrow">DATOS DE MERCADO</div><h2>Contexto de mercado</h2></div></div><div class="stat-grid" id="marketGrid"><div class="loading-row">Esperando contexto…</div></div></section>
           <section id="health" class="detail-section"><div class="section-head"><div><div class="eyebrow">OBSERVABILIDAD</div><h2>Salud del sistema</h2></div></div><div class="stat-grid" id="healthGrid"></div></section>
-          <section id="positions" class="detail-section"><div class="section-head"><div><div class="eyebrow">EXPOSICIÓN PAPER</div><h2>Posiciones abiertas</h2></div></div><div class="table-wrap"><table><thead><tr><th>Activo</th><th>Lado</th><th>Entrada</th><th>Precio</th><th>Nocional</th><th>Stop</th><th>Objetivo</th><th>P&amp;L</th><th>Antigüedad</th><th>Máx. favorable / adverso</th></tr></thead><tbody id="positionsTbl"></tbody></table></div></section>
+          <section id="positions" class="detail-section"><div class="section-head"><div><div class="eyebrow">SIN ORDENES REALES</div><h2>Sin posiciones</h2></div></div><div class="table-wrap"><table><thead><tr><th>Activo</th><th>Lado</th><th>Entrada</th><th>Precio</th><th>Nocional</th><th>Stop</th><th>Objetivo</th><th>P&amp;L</th><th>Antigüedad</th><th>Máx. favorable / adverso</th></tr></thead><tbody id="positionsTbl"></tbody></table></div></section>
           <section id="trades" class="detail-section"><div class="section-head"><div><div class="eyebrow">HISTORIAL PAPER</div><h2>Operaciones cerradas</h2></div></div><div class="table-wrap"><table><thead><tr><th>Operación</th><th>Activo</th><th>Lado</th><th>Entrada</th><th>Salida</th><th>Resultado</th><th>USDT</th><th>Motivo / integridad</th><th>Duración</th></tr></thead><tbody id="tradesTbl"></tbody></table></div></section>
           <section id="cycles" class="detail-section"><div class="section-head"><div><div class="eyebrow">REGISTRO INFLUX</div><h2>Ciclos recientes</h2></div></div><div class="table-wrap"><table><thead><tr><th>Ciclo</th><th>Activo</th><th>Hora NY</th><th>Precio</th><th>Decisión</th><th>Score ejecutar</th><th>Latencia</th><th>Contexto de Jev</th></tr></thead><tbody id="cyclesTbl"></tbody></table></div></section>
         </section>
@@ -204,6 +204,7 @@
     </div>
   </div>
 
-  <script src="assets/app.js?v=16"></script>
+  <script src="assets/scalp.js?v=16"></script>
+    <script src="assets/app.js?v=16"></script>
 </body>
 </html>
