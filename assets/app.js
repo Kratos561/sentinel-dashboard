@@ -107,6 +107,14 @@ function chart(series,currentTotal,start){
 /* --------------------------------------------------------------- RENDER */
 function render(d){
   lastData=d;
+  // scalp.js debe cargarse antes que app.js. Si no, avisamos en vez de
+  // dejar el panel con la estructura de la estrategia retirada.
+  if(typeof isScalp!=='function'){
+    const h=$('apihint');
+    if(h){h.textContent='falta assets/scalp.js: no se puede leer el feed del scalp';
+      h.classList.add('warn');}
+    return;
+  }
   if(isScalp(d))return renderScalp(d);
   const eq=d.equity||{},positions=markedPositions(d),trades=Array.isArray(d.trades)?d.trades:[],decisions=d.decisions||{},strategy=d.strategy||{},metrics=d.metrics||{},providers=d.providers?.sources||[],cycles=Array.isArray(d.cycles_influx)?d.cycles_influx:[],context=d.context||{};
   const symbols=(strategy.symbols||Object.keys(decisions)).filter(s=>!query||`${s} ${SYM(s)}`.toLowerCase().includes(query));
@@ -224,7 +232,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 
 /* --------------------------------------------------------------- RUTAS */
 const DETAIL_IDS=['loopTitle','market','health','positions','trades','cycles'];
-const routeNames={top:'Resumen',loopTitle:'Ciclo de Jev',market:'Mercado',health:'Salud',positions:'Posiciones',trades:'Operaciones',cycles:'Ciclos'};
+const routeNames={top:'Resumen',loopTitle:'Bucle del scalp',market:'Mercado',health:'Salud',positions:'Posiciones',trades:'Operaciones',cycles:'Ciclos'};
 function route(){
   const hash=(location.hash||'').slice(1),detail=DETAIL_IDS.includes(hash),name=routeNames[hash]||'Resumen';
   $('v-resumen').classList.toggle('on',!detail);$('v-det').classList.toggle('on',detail);$('crumbCurrent').textContent=name;
